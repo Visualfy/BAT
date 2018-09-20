@@ -144,7 +144,14 @@ WaveSurfer.Region = {
     this.resize = params.resize === undefined ? true : Boolean(params.resize);
     this.drag = params.drag === undefined ? false : Boolean(params.drag);
     this.loop = Boolean(params.loop);
+    if ((this.end - this.start)<1){
+
     this.color = params.color || 'rgba(252, 238, 137, 0.5)';
+
+    }else{
+
+    this.color = params.color || 'rgba(0, 255, 0, 0.5)';
+    }
     this.data = params.data || {};
     this.attributes = params.attributes || {};
     this.annotation = params.annotation || '';
@@ -175,6 +182,14 @@ WaveSurfer.Region = {
     if (null != params.color) {
       this.color = params.color;
     }
+    if ((this.end - this.start)<1){
+
+    this.color = params.color || 'rgba(252, 238, 137, 0.5)';
+
+    }else{
+
+    this.color = params.color || 'rgba(0, 255, 0, 0.5)';
+    }
     if (null != params.data) {
       this.data = params.data;
     }
@@ -199,6 +214,7 @@ WaveSurfer.Region = {
     if (null != params.proximity) {
       this.proximity = params.proximity;
     }
+
 
     this.updateRender();
     this.fireEvent('update');
