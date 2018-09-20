@@ -553,6 +553,18 @@
     $('.class-btn').on('click', function () {
       var region = handler.findRegionById(currentRegionId),
           data = $(this).data();
+      var modalWindow = $('#modal-window');
+      var region = handler.findRegionById(currentRegionId),
+          data = $(this).data();
+      if ((region.end-region.start)<1 ){
+        modalWindow.find('.modal-title').text('Too small region');
+        modalWindow.find('.modal-body').text('Minimum size 1 second');
+        modalWindow.modal('show');
+        return null;
+
+      }
+
+
       if (region == null || REGIONS_STATE) {
         return null;
       }

@@ -65,11 +65,11 @@ def create_segments(wav, duration, segments_length):
                 end_time = (i + 1) * float(segments_length)
             else:
                 end_time = float(duration)
-            name = wav.name.split('/')[-1].replace(".wav", "_" + str(start_time) + "_" + str(end_time) + ".wav")
+            name = wav.name.split('/')[-1].replace(".wav", "_" + str(start_time).replace(".", "_") + "_" + str(end_time).replace(".", "_") + ".wav")
             s = Segment(wav=wav, start_time=start_time, end_time=end_time, name=name)
             s.save()
     else:
-        name = wav.name.split('/')[-1].replace(".wav", "_" + "0.0" + "_" + str(duration) + ".wav")
+        name = wav.name.split('/')[-1].replace(".wav", "_" + "0_0" + "_" + str(duration).replace(".", "_") + ".wav")
         s = Segment(wav=wav, start_time=0.0, end_time=duration, name=name)
         s.save()
 
