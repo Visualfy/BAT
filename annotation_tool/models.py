@@ -19,6 +19,7 @@ class Project(models.Model):
 
 class Class(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    father = models.CharField(max_length=50)
 
     class Meta:
         ordering = ('name',)
