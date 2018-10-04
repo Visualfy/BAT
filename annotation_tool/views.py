@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -97,11 +98,15 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
     queryset = models.Annotation.objects.all()
     lookup_field = 'id'
 
+
     def post(self, request, *args, **kwargs):
         annotation = self.get_object()
         regions = models.Region.objects.filter(annotation=annotation)
         if not regions:
             events = models.Event.objects.filter(annotation=annotation)
+
+            segment = annotation.segment
+
             for e in events:
                 region = models.Region(annotation=annotation,
                                        start_time=e.start_time,
@@ -115,7 +120,7 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                             class_obj=e.event_class,
                                             prominence=5)
                 cp.save()
-
+                utils.region_to_wav(segment, region, e.event_class)
         utils.update_annotation_status(annotation,
                                        new_status=models.Annotation.FINISHED)
 
