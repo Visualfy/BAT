@@ -55,9 +55,12 @@ class TagSerializer(serializers.Serializer):
 
 class ClassSerializer(serializers.Serializer):
     name = serializers.CharField(label='Class name', max_length=50)
+    classes = serializers.ChoiceField(label='Root Class',choices=[])
+
 
     def validate(self, data):
         objects = models.Class.objects.filter(name=data.get('name'))
+
         if objects:
             raise serializers.ValidationError('Class with current params already exists.')
 
@@ -65,10 +68,22 @@ class ClassSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         validated_data['name'] = validated_data['name'].replace(' ', '_')
+        validated_data['root'] = models.Class.objects.get(name=validated_data['classes'])
+        del validated_data['classes']
         class_object = models.Class(**validated_data)
         class_object.save()
         return class_object
 
+    def __init__(self, *args, **kwargs):
+        classes = models.Class.objects.all()
+        class_dict = dict([(c.name, c.id) for c in classes])
+        self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
+        self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
+        self.fields['classes'].choice_strings_to_values = {
+            key: key for key in self.fields['classes'].choices.keys()
+        }
+        self.fields['classes'].allow_blank = kwargs.pop('allow_blank', False)
+        super(ClassSerializer,self).__init__(*args, **kwargs)
 
 class UploadDataSerializer(serializers.Serializer):
     project = serializers.PrimaryKeyRelatedField(queryset=models.Project.objects.all())
