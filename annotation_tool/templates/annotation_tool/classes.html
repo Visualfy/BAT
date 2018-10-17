@@ -52,6 +52,7 @@
           <input type="hidden" id="delete-url">
 
           <input type="submit" value="Create new class" class="btn btn-success"/>
+
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
           </form>
@@ -66,18 +67,21 @@
       <tr>
         <th>ID</th>
         <th>Class name</th>
-        <th></th>
+        <th>Root class</th>
       </tr>
       {% for class in query_data %}
+      {% if class.id is not 1 %}
         <tr>
           <td>{{ class.id }}</td>
           <td>{{ class.name }}</td>
+          <td>{{class.root}}</td>
           <td>
             <button data-delete-url="{% url 'class' class.id %}" class="btn btn-danger delete-item"
                     data-toggle="modal" data-target="#delete-modal">Delete
             </button>
           </td>
         </tr>
+      {%endif %}
       {% endfor %}
     </table>
     <p>Displaying {{ query_data|length }} classes ordered by ID.</p>
