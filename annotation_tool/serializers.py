@@ -5,6 +5,7 @@ from django.utils import timezone
 import colorsys
 from aiorest_ws.utils.fields import to_choices_dict, flatten_choices_dict
 from annotation_tool import models
+import logging
 
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
@@ -19,20 +20,36 @@ class ProjectSerializer(serializers.Serializer):
         project.save()
         n_colors = len(validated_data['classes'])
         colors = []
-        for i in xrange(n_colors):
+
+        for i in xrange(n_colors): #TODO: comment if it's necesary
             colors.append(colorsys.hsv_to_rgb(i / float(n_colors), 1, 1))
-        for i, class_name in enumerate(sorted(validated_data['classes'])):
-            c = models.Class.objects.get(name=class_name)
-            rgba_color = "rgba(%d, %d, %d, 0.5)" % (255 * colors[i][0],
-                                                          255 * colors[i][1],
-                                                          255 * colors[i][2])
-            ci = models.ClassInstance.objects.create(project=project,
-                                                     class_obj=c,
-                                                     shortcut=i + 1,
-                                                     color=rgba_color)
-            ci.save()
+
+        allclasses = enumerate(sorted(validated_data['classes']))
+        # for i, class_name in enumerate(sorted(validated_data['classes'])):
+        self.getAllChilds(allclasses, project, 0)
 
         return project
+
+
+    # Get all childs
+    def getAllChilds(self, allclasses, project, previousshortcut):
+        for i, class_name in allclasses:
+            c = models.Class.objects.get(name=class_name)
+            logging.debug('algo')
+            # rgba_color = "rgba(%d, %d, %d, 0.5)" % (
+            #     255 * colors[i][0],
+            #     255 * colors[i][1],
+            #     255 * colors[i][2]
+            # )
+
+            ci = models.ClassInstance.objects.create(
+                project=project,
+                class_obj=c,
+                shortcut=i + previousshortcut,
+                # color=rgba_color
+            )
+            ci.save()
+
 
     # All the names of Class objects are loaded to the classes field
     # http://programtalk.com/python-examples/aiorest_ws.utils.fields.flatten_choices_dict/
@@ -40,10 +57,10 @@ class ProjectSerializer(serializers.Serializer):
         classes = models.Class.objects.filter(root = 1).exclude(name ='Root')
         class_dict = dict([(c.name, c.id) for c in classes])
         self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
-        self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)   
+        self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
         self.fields['classes'].choice_strings_to_values = {
             key: key for key in self.fields['classes'].choices.keys()
-        } 
+        }
         self.fields['classes'].allow_blank = kwargs.pop('allow_blank', False)
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
