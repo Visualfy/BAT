@@ -6,7 +6,6 @@ import colorsys
 from aiorest_ws.utils.fields import to_choices_dict, flatten_choices_dict
 from annotation_tool import models
 
-
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
     overlap = serializers.BooleanField(label='Allow class overlap in this project', default=False)
@@ -60,13 +59,13 @@ class ClassSerializer(serializers.Serializer):
 
     def validate(self, data):
         objects = models.Class.objects.filter(name=data.get('name'))
-
         if objects:
             raise serializers.ValidationError('Class with current params already exists.')
 
         return data
 
     def create(self, validated_data):
+
         validated_data['name'] = validated_data['name'].replace(' ', '_')
         validated_data['root'] = models.Class.objects.get(name=validated_data['classes'])
         del validated_data['classes']
@@ -110,6 +109,7 @@ class UserRegistrationSerializer(serializers.Serializer):
                                              style={'input_type': 'password'})
 
     def validate(self, data):
+        print('hola')
         if data.get('password') != data.get('confirm_password'):
             raise serializers.ValidationError('Those passwords don\'t match.')
 
