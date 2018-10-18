@@ -13,13 +13,11 @@ import socket
 import os
 from .common import *  # noqa
 import logging
+
 # DEBUG
 # ------------------------------------------------------------------------------
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
-
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
 
 logging.basicConfig(
         level = logging.DEBUG,
@@ -27,6 +25,8 @@ logging.basicConfig(
         filename = 'debug.log',
         filemode = 'a'
     )
+
+
 # SECRET CONFIGURATION
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key

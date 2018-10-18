@@ -21,7 +21,6 @@ class Class(models.Model):
     name = models.CharField(max_length=50, unique=True)
     root = models.ForeignKey('self',on_delete=models.CASCADE,default = 1)
 
-
     class Meta:
         ordering = ('name',)
 

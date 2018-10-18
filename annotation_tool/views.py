@@ -26,7 +26,6 @@ from annotation_tool.serializers import ProjectSerializer, ClassSerializer, Uplo
 import utils
 from django.contrib.auth import authenticate, login, logout
 
-
 class ProjectsView(SuperuserRequiredMixin, GenericAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'annotation_tool/projects.html'
@@ -151,6 +150,7 @@ class ClassesView(SuperuserRequiredMixin, GenericAPIView):
     def get(self, request, *args, **kwargs):
         return Response({'query_data': self.get_queryset(),
                          'serializer': self.get_serializer(),
+                         'variable':self.queryset,
                          'errors': None})
 
     def post(self, request, *args, **kwargs):
@@ -244,7 +244,7 @@ class UploadFileView(SuperuserRequiredMixin, GenericAPIView):
             project = models.Project.objects.get(pk=project_id)
             for f in files:
                 w = utils.create_wav(project=project, file=f, name=f.name, upload_date=timezone.now())
-                duration = utils.get_wav_duration(w) 
+                duration = utils.get_wav_duration(w)
                 utils.create_segments(wav=w, duration=duration, segments_length=segments_length)
             return HttpResponseRedirect('./')
         else:
@@ -389,7 +389,7 @@ def update_end_event(request):
                     end_time=region_data['end_time'] - region_data['padding'])
 
     utils.update_annotation_status(annotation,
-                                   new_status=models.Annotation.UNFINISHED)   
+                                   new_status=models.Annotation.UNFINISHED)
     event.save()
 
     return JsonResponse({'event_id': event.id})

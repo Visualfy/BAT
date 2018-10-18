@@ -5,12 +5,13 @@ from django.utils import timezone
 import colorsys
 from aiorest_ws.utils.fields import to_choices_dict, flatten_choices_dict
 from annotation_tool import models
-import logging
 
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
     overlap = serializers.BooleanField(label='Allow class overlap in this project', default=False)
     classes = serializers.MultipleChoiceField(choices=[])
+
+    rootClass = 'Baby' #TODO fix first class. To be null or root or something like that.
 
     # Creation of the project and the required ClassInstance objects
     def create(self, validated_data):
@@ -20,41 +21,25 @@ class ProjectSerializer(serializers.Serializer):
         project.save()
         n_colors = len(validated_data['classes'])
         colors = []
-
-        for i in xrange(n_colors): #TODO: comment if it's necesary
+        for i in xrange(n_colors):
             colors.append(colorsys.hsv_to_rgb(i / float(n_colors), 1, 1))
-
-        allclasses = enumerate(sorted(validated_data['classes']))
-        # for i, class_name in enumerate(sorted(validated_data['classes'])):
-        self.getAllChilds(allclasses, project, 0)
-
-        return project
-
-
-    # Get all childs
-    def getAllChilds(self, allclasses, project, previousshortcut):
-        for i, class_name in allclasses:
+        for i, class_name in enumerate(sorted(validated_data['classes'])):
             c = models.Class.objects.get(name=class_name)
-            logging.debug('algo')
-            # rgba_color = "rgba(%d, %d, %d, 0.5)" % (
-            #     255 * colors[i][0],
-            #     255 * colors[i][1],
-            #     255 * colors[i][2]
-            # )
-
-            ci = models.ClassInstance.objects.create(
-                project=project,
-                class_obj=c,
-                shortcut=i + previousshortcut,
-                # color=rgba_color
-            )
+            rgba_color = "rgba(%d, %d, %d, 0.5)" % (255 * colors[i][0],
+                                                    255 * colors[i][1],
+                                                    255 * colors[i][2])
+            ci = models.ClassInstance.objects.create(project=project,
+                                                     class_obj=c,
+                                                     shortcut=i + 1,
+                                                     color=rgba_color)
             ci.save()
 
+        return project
 
     # All the names of Class objects are loaded to the classes field
     # http://programtalk.com/python-examples/aiorest_ws.utils.fields.flatten_choices_dict/
     def __init__(self, *args, **kwargs):
-        classes = models.Class.objects.filter(root = 1).exclude(name ='Root')
+        classes = models.Class.objects.filter(root=1).exclude(name=self.rootClass)
         class_dict = dict([(c.name, c.id) for c in classes])
         self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
         self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
@@ -64,6 +49,20 @@ class ProjectSerializer(serializers.Serializer):
         self.fields['classes'].allow_blank = kwargs.pop('allow_blank', False)
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
+
+        # Find Childs of all class and create a tree structure
+        classTree = filter(lambda x: x.root.name == self.rootClass, classes)
+
+        for cclass in classTree:
+            cclass.childs = self.getChildClass(classes, cclass.name)
+
+    def getChildClass (self, classes, rootName):
+        classChildTree = filter(lambda x: x.root.name == rootName and x.root.name != self.rootClass, classes)
+
+        for cclass in classChildTree:
+            cclass.childs = self.getChildClass(classes, cclass.name)
+
+        return classChildTree
 
 class TagSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50)
