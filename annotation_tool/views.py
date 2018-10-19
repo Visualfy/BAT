@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from django.core import serializers
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -25,6 +26,8 @@ from annotation_tool.serializers import ProjectSerializer, ClassSerializer, Uplo
     UserRegistrationSerializer#, RegionSerializer, ClassProminenceSerializer
 import utils
 from django.contrib.auth import authenticate, login, logout
+
+import logging
 
 class ProjectsView(SuperuserRequiredMixin, GenericAPIView):
     renderer_classes = [TemplateHTMLRenderer]
@@ -257,6 +260,7 @@ class UploadFileView(SuperuserRequiredMixin, GenericAPIView):
 class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'annotation_tool/new_annotation.html'
+    variable = 'variable'
 
     def _filters(self):
         return {
@@ -301,9 +305,9 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
             return HttpResponseRedirect(reverse('new_annotation'))
 
         context['classes'] = models.ClassInstance.objects.filter(
-                                                project=project).values_list('class_obj__name',
-                                                                             'color',
-                                                                             'shortcut').order_by('class_obj__name')
+            project=project).values_list('class_obj__name',
+                                         'color',
+                                         'shortcut').order_by('class_obj__name')
         context['prominence_choices'] = models.ClassProminence.PROMINENCE_CHOICES
         context['class_dict'] = json.dumps(list(context['classes']), cls=DjangoJSONEncoder)
         context['project'] = project
@@ -317,6 +321,16 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
         self.template_name = 'annotation_tool/tool.html'
 
         context['visualization'] = self._get_visualization(request)
+
+        context['CI_JSON'] = serializers.serialize("json", models.ClassInstance.objects.filter(
+            project=project))
+
+        arrayCiId = []
+        for CI in  models.ClassInstance.objects.filter(project=project):
+            arrayCiId.append(CI.class_obj.id)
+
+        context['CLASSES_JSON'] = serializers.serialize("json", filter(
+            lambda Class: Class.id in arrayCiId  ,models.Class.objects.all()))
 
         return Response(context)
 
@@ -384,9 +398,9 @@ def update_end_event(request):
         annotation = event.annotation
     else:
         event = models.Event(
-                    annotation=annotation,
-                    start_time=region_data['start_time'] - region_data['padding'],
-                    end_time=region_data['end_time'] - region_data['padding'])
+            annotation=annotation,
+            start_time=region_data['start_time'] - region_data['padding'],
+            end_time=region_data['end_time'] - region_data['padding'])
 
     utils.update_annotation_status(annotation,
                                    new_status=models.Annotation.UNFINISHED)
@@ -456,7 +470,7 @@ def create_region(request):
     for class_name in region_data['classes'].split():
         class_obj = models.Class.objects.get(name=class_name)
         class_prominence = models.ClassProminence(region=region,
-                                               class_obj=class_obj)
+                                                  class_obj=class_obj)
         class_prominence.save()
 
     return JsonResponse({'region_id': region.id})

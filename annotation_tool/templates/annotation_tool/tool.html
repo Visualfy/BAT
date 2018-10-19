@@ -9,7 +9,6 @@
 
 {% block body_block %}
 
-  
   <link rel="stylesheet" href="{% static 'css/annotator/font-awesome.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/bootstrap-tokenfield.min.css' %}">
 
@@ -48,9 +47,28 @@
 
     <div class="row control-form">
       <div class="col-md-1" id="class-panel-header">Class</div>
+
+        <div id="classes_panel">
+
+        </div>
+
+
       <div class="col-md-11">
         {% for name, color, shortcut in classes %}
-          <div class="class-btn" data-class-color="{{ color }}" data-class-name="{{ name }}">{{ name }} <span class="shortcut">({{ shortcut }})</span></div>
+
+
+
+
+
+
+             <div class="class-btn" data-class-color="{{ color }}" data-class-name="{{ name }}">{{ name }} <span class="shortcut">({{ shortcut }})</span></div>
+
+
+
+
+
+
+
         {% endfor %}
       </div>
     </div>
@@ -120,12 +138,11 @@
   <script src="{% static 'js/annotator/src/overlaps.js' %}"></script>
   <script src="{% static 'js/annotator/src/prominence.js' %}"></script>
   <script src="{% static 'js/annotator/src/regions.js' %}"></script>
-  <script src="{% static 'js/annotator/src/utils.js' %}"></script>
+  <script src="{% static 'js/childs.js' %}"></script>
   <script type="text/javascript" src="{% static 'js/annotator/src/wavesurfer.labels.js' %}"></script>
   <script type="text/javascript" src="{% static 'js/url.js' %}"></script>
 
   <script type="text/javascript">
-
     wavesurferHandler = {
       // contain all wavesurfers
       wavesurfer: null,
@@ -637,6 +654,28 @@
       var newUrl = parsedUrl.scheme + '://' + parsedUrl.host + port + parsedUrl.path + '?' + $.param(params)
       window.location = newUrl;
     });
+
+
+    /************* For Print Class in Tree ***********/
+
+    var ci_json = {{ CI_JSON|safe }}
+    var classes_json = {{ CLASSES_JSON|safe }}
+
+    console.log('CI',ci_json);
+    console.log('Class',classes_json);
+
+    const classes_filtered = ci_json.map(instance => {
+        const Class = classes_json.filter(x => x.pk === instance.fields.class_obj)[0].fields;
+        let obj = {};
+        obj.id = instance.fields.class_obj;
+        obj.color = instance.fields.color;
+        obj.name = Class.name;
+        obj.root = Class.root;
+        return obj;
+    });
+
+    document.querySelector('#classes_panel').innerHTML+=classes_filtered.filter(x=>x.root===1).map( Class => `<p>${Class.name}</p>`);
+
 
   </script>
 
