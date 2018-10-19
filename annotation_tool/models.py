@@ -14,7 +14,7 @@ class Project(models.Model):
     overlap = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.name)
+        return self.name.encode('utf-8').strip()
 
 
 class Class(models.Model):
@@ -25,7 +25,7 @@ class Class(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return str(self.name)
+        return self.name.encode('utf-8').strip()
 
 class ClassInstance(models.Model):
     project = models.ForeignKey('Project', on_delete=models.CASCADE)
