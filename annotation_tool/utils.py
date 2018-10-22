@@ -179,12 +179,35 @@ def create_tmp_file(segment):
         start = int(ceil(sample_rate * (segment.start_time - padding)))
         end = int(floor(sample_rate * (segment.end_time + padding)))
         wav = wav_file[1]
+
     write(
         output_file,
         sample_rate,
         wav[start:end])
 
     return output_file, padding
+
+def region_to_wav(segment,region,clas):
+    try:
+        os.mkdir(BASE_DIR + '/chunks/')
+    except OSError:
+        pass
+
+    input_file = os.path.join(MEDIA_ROOT, segment.wav.file.name)
+    output_file = 'chunks/' +str(clas)+'_'+ str(region.id)+'_' + input_file.split('/')[-1]
+    start = segment.start_time + region.start_time
+    end = segment.start_time + region.end_time
+
+    wav_file = read(input_file, 'r')
+    sample_rate = wav_file[0]
+    wav = wav_file[1]
+    start = int(ceil(sample_rate * start))
+    end = int(floor(sample_rate * end))
+    write(
+        output_file,
+        sample_rate,
+        wav[start:end])
+
 
 
 def compute_rms(sr, wav, start_time, end_time, dtype):
