@@ -13,3 +13,8 @@
 .parentButton{
     margin-bottom: 16px;
 }
+
+button.showOrHideChilds{
+    padding: 14px;
+    margin-left: 4px;
+}

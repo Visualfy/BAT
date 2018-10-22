@@ -78,7 +78,7 @@
                                 {{ name }}
                                 <span class="shortcut">({{ shortcut }})</span>
                             </button>
-                           <button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>
+                            <button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>
                             <div class="childs">
 
                             </div>
@@ -173,19 +173,30 @@
 
         const recreateButtonsEvents = () => {
             $('.btn_mark').off('click');
+            $('.showOrHideChilds').off('click');
+
             btns();
             markRegion();
+            eventShowOrHideChilds();
         };
 
-        function chargeChild(father){
-            const childs = classes_filtered.filter(cclass => {if (cclass.root == father.dataset['classId']) return cclass });
-            const childsDOM =  $(father).parent().find('div.childs li').length;
+        function findDirectChilds(father){
+            return classes_filtered.filter(cclass => {if (cclass.root == father) return cclass })
+        }
 
-            if(childs.length > 0 && childsDOM === 0) {
+        function chargeChild(father){
+            const childs = findDirectChilds(father.dataset['classId']);
+            const childsDOM =  $(father).parent().find('div.childs li');
+
+            if(childs.length > 0 && childsDOM.length === 0) {
 
                 var UL = $('<ul></ul>');
 
                 const childsToInsert = childs.map(child => {
+
+                    var plus = findDirectChilds(child.id).length > 0 ?
+                         '<button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>': '';
+
                     return `<li>
                            <span>
                                 <button
@@ -197,7 +208,7 @@
                                 >
                                     ${child.name}
                                     <span class="shortcut">(${child.shortcut})</span>
-                                </button>
+                                </button>`+plus+`
                             <div class='childs'></div>
                             </span>
                         </li>`;
@@ -209,38 +220,54 @@
 
                 $(father).parent().find('div.childs').html(UL);
                 recreateButtonsEvents();
+
+                switchBtnShowOrHide(father.nextSibling);
             }
         }
 
         function toHideChild(btn){
-            console.log(btn)
+            $(btn).parent().find('> div.childs').html('');
         }
 
         function toShowChild(btn){
+            chargeChild($(btn).parent().find('> button.btn_mark')[0]);
+        }
 
-            console.log(btn)
+        function switchBtnShowOrHide(btn){
+
+            if(btn.dataset['classState'] === 'hide') {
+                btn.dataset['classState'] = 'show';
+                btn.classList.remove('fa-rotate-180');
+            }
+
+            else{
+                btn.dataset['classState']='hide';
+                btn.classList.add('fa-rotate-180');
+            }
         }
 
         function showOrHideChilds(e){
 
             var btn = e.target;
+            console.log(e.target);
+
+
+            if(e.target.tagName==='SPAN')
+                btn=e.target.parentNode;
 
             if (btn.dataset['classState']==='hide'){
-                toShowChild(btn);
-                btn.dataset['classState']='show';
-                btn.classList.remove('fa-rotate-180')
+                toHideChild(btn);
+                switchBtnShowOrHide(btn);
             }
             else{
-                toHideChild(btn);
-                btn.dataset['classState']='hide';
-                btn.classList.add('fa-rotate-180')
+                toShowChild(btn);
             }
 
         }
 
-        $('.showOrHideChilds').on('click',function(e){
-           showOrHideChilds(e);
-        });
+        var eventShowOrHideChilds = () =>$('.showOrHideChilds').on('click',function(e){
+            showOrHideChilds(e);
+        });eventShowOrHideChilds();
 
         wavesurferHandler = {
             // contain all wavesurfers
