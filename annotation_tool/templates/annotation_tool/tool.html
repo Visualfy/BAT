@@ -67,7 +67,7 @@
             <div class="col-md-11">
                 {% for id, name, root, color, shortcut in classes %}
                     {% if root == 1 %}
-                        <span class='parentButton'>
+                        <div class='parentButton'>
                             <button
                                     data-class-id="{{ id }}"
                                     data-class-color="{{ color }}"
@@ -81,7 +81,7 @@
                             <div class="childs">
 
                             </div>
-                        </span>
+                        </div>
                     {% endif %}
                 {% endfor %}
             </div>
