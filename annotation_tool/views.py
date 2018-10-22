@@ -1,5 +1,7 @@
 import json
+import os
 import re
+from django.core import serializers
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -25,6 +27,7 @@ from annotation_tool.serializers import ProjectSerializer, ClassSerializer, Uplo
 import utils
 from django.contrib.auth import authenticate, login, logout
 
+import logging
 
 class ProjectsView(SuperuserRequiredMixin, GenericAPIView):
     renderer_classes = [TemplateHTMLRenderer]
@@ -97,11 +100,15 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
     queryset = models.Annotation.objects.all()
     lookup_field = 'id'
 
+
     def post(self, request, *args, **kwargs):
         annotation = self.get_object()
         regions = models.Region.objects.filter(annotation=annotation)
         if not regions:
             events = models.Event.objects.filter(annotation=annotation)
+
+            segment = annotation.segment
+
             for e in events:
                 region = models.Region(annotation=annotation,
                                        start_time=e.start_time,
@@ -115,7 +122,7 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                             class_obj=e.event_class,
                                             prominence=5)
                 cp.save()
-
+                utils.region_to_wav(segment, region, e.event_class)
         utils.update_annotation_status(annotation,
                                        new_status=models.Annotation.FINISHED)
 
@@ -146,6 +153,7 @@ class ClassesView(SuperuserRequiredMixin, GenericAPIView):
     def get(self, request, *args, **kwargs):
         return Response({'query_data': self.get_queryset(),
                          'serializer': self.get_serializer(),
+                         'variable':self.queryset,
                          'errors': None})
 
     def post(self, request, *args, **kwargs):
@@ -239,7 +247,7 @@ class UploadFileView(SuperuserRequiredMixin, GenericAPIView):
             project = models.Project.objects.get(pk=project_id)
             for f in files:
                 w = utils.create_wav(project=project, file=f, name=f.name, upload_date=timezone.now())
-                duration = utils.get_wav_duration(w) 
+                duration = utils.get_wav_duration(w)
                 utils.create_segments(wav=w, duration=duration, segments_length=segments_length)
             return HttpResponseRedirect('./')
         else:
@@ -252,6 +260,7 @@ class UploadFileView(SuperuserRequiredMixin, GenericAPIView):
 class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'annotation_tool/new_annotation.html'
+    variable = 'variable'
 
     def _filters(self):
         return {
@@ -296,9 +305,11 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
             return HttpResponseRedirect(reverse('new_annotation'))
 
         context['classes'] = models.ClassInstance.objects.filter(
-                                                project=project).values_list('class_obj__name',
-                                                                             'color',
-                                                                             'shortcut').order_by('class_obj__name')
+            project=project).values_list('class_obj__id',
+                                         'class_obj__name',
+                                         'class_obj__root',
+                                         'color',
+                                         'shortcut').order_by('class_obj__name')
         context['prominence_choices'] = models.ClassProminence.PROMINENCE_CHOICES
         context['class_dict'] = json.dumps(list(context['classes']), cls=DjangoJSONEncoder)
         context['project'] = project
@@ -312,6 +323,21 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
         self.template_name = 'annotation_tool/tool.html'
 
         context['visualization'] = self._get_visualization(request)
+
+
+        # TODO: Can be innecesary
+
+        context['CI_JSON'] = serializers.serialize("json", models.ClassInstance.objects.filter(
+            project=project))
+
+        arrayCiId = []
+        for CI in  models.ClassInstance.objects.filter(project=project):
+            arrayCiId.append(CI.class_obj.id)
+
+        context['CLASSES_JSON'] = serializers.serialize("json", filter(
+            lambda Class: Class.id in arrayCiId  ,models.Class.objects.all()))
+
+        # TODO: until here
 
         return Response(context)
 
@@ -379,12 +405,12 @@ def update_end_event(request):
         annotation = event.annotation
     else:
         event = models.Event(
-                    annotation=annotation,
-                    start_time=region_data['start_time'] - region_data['padding'],
-                    end_time=region_data['end_time'] - region_data['padding'])
+            annotation=annotation,
+            start_time=region_data['start_time'] - region_data['padding'],
+            end_time=region_data['end_time'] - region_data['padding'])
 
     utils.update_annotation_status(annotation,
-                                   new_status=models.Annotation.UNFINISHED)   
+                                   new_status=models.Annotation.UNFINISHED)
     event.save()
 
     return JsonResponse({'event_id': event.id})
@@ -451,7 +477,7 @@ def create_region(request):
     for class_name in region_data['classes'].split():
         class_obj = models.Class.objects.get(name=class_name)
         class_prominence = models.ClassProminence(region=region,
-                                               class_obj=class_obj)
+                                                  class_obj=class_obj)
         class_prominence.save()
 
     return JsonResponse({'region_id': region.id})
