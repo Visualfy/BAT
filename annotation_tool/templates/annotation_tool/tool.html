@@ -9,637 +9,783 @@
 
 {% block body_block %}
 
-  
-  <link rel="stylesheet" href="{% static 'css/annotator/font-awesome.min.css' %}">
-  <link rel="stylesheet" href="{% static 'css/bootstrap-tokenfield.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/annotator/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-tokenfield.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tools.css' %}">
 
-  <div class="container">
-    <div class="row">
-      <div class="col-xs-6">
-        <button id="switch-view" class="btn btn-success">Switch view</button>
-      </div>
-      <div class="col-xs-6">
-        <div class="row control-form">
-          <div class="col-md-12">
-            <div style="float: right;">
-              {% if project.overlap %}
-                <button id="solve-overlaps-button" class="btn btn-warning">Solve overlaps</button>
-                <button id="back-annotations-button" class="btn btn-warning">Back to annotation</button>
-              {% endif %}
-              <button data-load-next="0" class="btn btn-primary finish-annotation-button">Finish annotation</button>
-              <button data-load-next="1" class="btn btn-primary finish-annotation-button">Finish annotation and load next</button>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-6">
+                <button id="switch-view" class="btn btn-success">Switch view</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="waveform"></div>
-    <div id="waveform-timeline"></div>
-
-    <div style="text-align: center">
-      <button class="btn btn-primary" id="play-pause-main-button">
-        <i class="glyphicon glyphicon-play"></i>
-        Play /
-        <i class="glyphicon glyphicon-pause"></i>
-        Pause
-      </button>
-    </div>
-
-    <div class="row control-form">
-      <div class="col-md-1" id="class-panel-header">Class</div>
-      <div class="col-md-11">
-        {% for name, color, shortcut in classes %}
-          <div class="class-btn" data-class-color="{{ color }}" data-class-name="{{ name }}">{{ name }} <span class="shortcut">({{ shortcut }})</span></div>
-        {% endfor %}
-      </div>
-    </div>
-    <div class="row control-form tags-input-container">
-      <div class="col-md-1" id="tags-panel-header">Tags</div>
-      <div class="col-md-6">
-        <div class="col-md-8">
-          <input type="text" class="form-control" id="tags-input" value="">
-        </div>
-        <div class="col-md-3"><button class="btn" id="tag_button">Add tags</button></div>
-      </div>
-    </div>
-    <div class="row control-form">
-      <div class="col-md-1" id="regions-mode-tag-container"><span id="regions-mode-tag-label">Tags</span></div>
-      <div class="col-md-2"></div>
-      <div class="col-md-7" id="tags-container"></div>
-    </div>
-    <div id="class-prominence-container">
-      <div class="class-prominence-item fake-item">
-        <div class="prominence-label-container">
-          <div class="prominence-label"></div>
-        </div>
-        <div class="prominence-circles">
-          {% for id, name in prominence_choices %}
-            <div class="circle" data-toggle="tooltip" data-placement="bottom" data-id="{{ id }}"
-                 title="{{ name }}"></div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <div>&nbsp;</div>
-    <div id="modal-window" class="modal fade" role="dialog">
-      <div class="modal-dialog">
-
-        <!-- Modal content-->
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title"></h4>
-          </div>
-          <div class="modal-body">
-
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
+            <div class="col-xs-6">
+                <div class="row control-form">
+                    <div class="col-md-12">
+                        <div style="float: right;">
+                            {% if project.overlap %}
+                                <button id="solve-overlaps-button" class="btn btn-warning">Solve overlaps</button>
+                                <button id="back-annotations-button" class="btn btn-warning">Back to annotation</button>
+                            {% endif %}
+                            <button data-load-next="0" class="btn btn-primary finish-annotation-button">Finish annotation</button>
+                            <button data-load-next="1" class="btn btn-primary finish-annotation-button">Finish annotation and load next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-      </div>
+        <div id="waveform"></div>
+        <div id="waveform-timeline"></div>
+
+        <div style="text-align: center">
+            <button class="btn btn-primary" id="play-pause-main-button">
+                <i class="glyphicon glyphicon-play"></i>
+                Play /
+                <i class="glyphicon glyphicon-pause"></i>
+                Pause
+            </button>
+        </div>
+
+        <div class="row control-form tags-input-container">
+            <div class="col-md-1" id="tags-panel-header">Tags</div>
+            <div class="col-md-6">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" id="tags-input" value="">
+                </div>
+                <div class="col-md-3"><button class="btn" id="tag_button">Add tags</button></div>
+            </div>
+        </div>
+        <div class="row control-form">
+            <div class="col-md-1" id="regions-mode-tag-container"><span id="regions-mode-tag-label">Tags</span></div>
+            <div class="col-md-2"></div>
+            <div class="col-md-7" id="tags-container"></div>
+        </div>
+
+        <div class="row control-form">
+            <div class="col-md-1" id="class-panel-header">Class</div>
+
+            <div class="col-md-11">
+                {% for id, name, root, color, shortcut in classes %}
+                    {% if root == 1 %}
+                        <div class='parentButton'>
+                            <button
+                                    data-class-id="{{ id }}"
+                                    data-class-color="{{ color }}"
+                                    data-class-name="{{ name }}"
+                                    class="btn btn-primary btn_mark"
+                                    type="button"
+                            >
+                                {{ name }}
+                                <span class="shortcut">({{ shortcut }})</span>
+                            </button>
+                            <button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>
+                            <div class="childs">
+
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="class-prominence-container">
+            <div class="class-prominence-item fake-item">
+                <div class="prominence-label-container">
+                    <div class="prominence-label"></div>
+                </div>
+                <div class="prominence-circles">
+                    {% for id, name in prominence_choices %}
+                        <div class="circle" data-toggle="tooltip" data-placement="bottom" data-id="{{ id }}"
+                             title="{{ name }}"></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div>&nbsp;</div>
+        <div id="modal-window" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title"></h4>
+                    </div>
+                    <div class="modal-body">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
-  </div>
-  {% if regions %}
-    <style>
-      .delete-tag-button {
-        display: none;
-      }
-    </style>
-  {% endif %}
-
-  <script src="{% static 'js/bootstrap-tokenfield.min.js' %}"></script>
-  <script src="{% static 'js/annotator/colormap/colormap.min.js' %}"></script>
-  <script src="{% static 'js/annotator/lib/wavesurfer.min.js' %}"></script>
-  <script src="{% static 'js/annotator/lib/wavesurfer.spectrogram.min.js' %}"></script>
-  <script src="{% static 'js/annotator/src/wavesurfer.drawer.extended.js' %}"></script>
-  <script src="{% static 'js/annotator/src/wavesurfer.regions.js' %}"></script>
-  <script src="{% static 'js/annotator/src/wavesurfer.timeline.js' %}"></script>
-  <script src="{% static 'js/annotator/src/overlaps.js' %}"></script>
-  <script src="{% static 'js/annotator/src/prominence.js' %}"></script>
-  <script src="{% static 'js/annotator/src/regions.js' %}"></script>
-  <script src="{% static 'js/annotator/src/utils.js' %}"></script>
-  <script type="text/javascript" src="{% static 'js/annotator/src/wavesurfer.labels.js' %}"></script>
-  <script type="text/javascript" src="{% static 'js/url.js' %}"></script>
-
-  <script type="text/javascript">
-
-    wavesurferHandler = {
-      // contain all wavesurfers
-      wavesurfer: null,
-      labels: [],
-
-      init: function () {
-        this.setWavesurfer();
-      },
-
-      setWavesurfer: function () {
-        var colorMap = colormap({
-              colormap: magma,
-              nshades: 256,
-              format: 'rgb',
-              alpha: 1
-        });
-        var wavesurfer = WaveSurfer.create({
-              container: '#waveform',
-              waveColor: 'violet',
-              progressColor: 'purple',
-              normalize: true,
-              fillParent: true,
-              height: WAVESURFER_HEIGHT,
-              colorMap: colorMap,
-              fftSamples: WAVESURFER_HEIGHT * 2,
-              hideScrollbar: true
-        });
-
-        wavesurfer.setVolume(1);
-        wavesurfer.params.visualization = '{{ visualization }}';
-        wavesurfer.load("{% url 'media' tmp_segment_path %}");
-
-        // Create label container
-        var labelsContainer = $('<div></div>')
-            .addClass('labels');
-        $('#waveform').prepend(labelsContainer)
-        var labels = Object.create(WaveSurfer.Labels);
-        labels.init({
-          wavesurfer: wavesurfer,
-          container: '.labels'
-        });
-        this.labels.push(labels);
-
-        this.wavesurfer = wavesurfer;
-
-        this.bindEvents(wavesurfer);
-
-        return wavesurfer;
-      },
-
-      getWavesurfer: function() {
-        return this.wavesurfer;
-      },
-
-      addRegion: function(wavesurfer, type, classes, tags, id, start_time, end_time, color, update_db) {
-        var attrs = {
-          'class': classes,
-          'tags': tags,
-          'update_db': update_db
-        };
-        if (type == 'event') {
-          attrs['event_id'] = id
-        } else {
-          attrs['region_id'] = id
-        }
-
-        var region = wavesurfer.addRegion({
-          attributes: attrs,
-          start: start_time,
-          end: end_time,
-          color: color,
-          annotation: classes
-        });
-
-        return region;
-      },
-
-      removeRegion: function(region, update_db) {
-        region.attributes['update_db'] = update_db
-        region.remove();
-      },
-
-      getAllRegions: function() {
-        var regions = [];
-        for (var i in this.wavesurfer.regions.list) {
-          regions.push(this.wavesurfer.regions.list[i]);
-        }
-        return regions;
-      },
-
-      findRegionById: function (id) {        
-        if (this.wavesurfer.regions.list[id] != undefined) {
-          return this.wavesurfer.regions.list[id];
-        } else {
-          return null;
-        }
-      },
-
-      seekTo: function (position) {
-        this.wavesurfer.seekTo(position);
-      },
-
-      playPause: function () {
-        this.wavesurfer.playPause();
-      },
-
-      isPlaying: function () {
-        return this.wavesurfer.isPlaying();
-      },
-
-      enableDragSelection: function () {
-        this.wavesurfer.enableDragSelection({});
-      },
-
-      disableDragSelection: function () {
-        this.wavesurfer.disableDragSelection({});
-      },
-
-      bindEvents: function (wavesurfer) {
-        that = this;
-
-        wavesurfer.on('region-created', function (region) {
-          // In case region was created by dragging. It is not possible to set it before.
-          // Set to false because it is added in onRegionUpdateEnd.
-          if (!('update_db' in region.attributes)) {
-            region.attributes['update_db'] = false
-          }
-          onRegionCreated(region);
-          delete region.attributes['update_db'];
-        });
-
-        wavesurfer.on('region-update-end', function (region, event, eventType) {
-          if (eventType == 'drag') {
-            return;
-          }
-          setTimeout(function () {
-            var check_region = wavesurfer.regions.list[region.id];
-            // region was deleted
-            if (typeof check_region != 'undefined') {
-              onRegionUpdateEnd(wavesurfer, region);
+    {% if regions %}
+        <style>
+            .delete-tag-button {
+                display: none;
             }
-          }, 50);
+        </style>
+    {% endif %}
+
+    <script src="{% static 'js/bootstrap-tokenfield.min.js' %}"></script>
+    <script src="{% static 'js/annotator/colormap/colormap.min.js' %}"></script>
+    <script src="{% static 'js/annotator/lib/wavesurfer.min.js' %}"></script>
+    <script src="{% static 'js/annotator/lib/wavesurfer.spectrogram.min.js' %}"></script>
+    <script src="{% static 'js/annotator/src/wavesurfer.drawer.extended.js' %}"></script>
+    <script src="{% static 'js/annotator/src/wavesurfer.regions.js' %}"></script>
+    <script src="{% static 'js/annotator/src/wavesurfer.timeline.js' %}"></script>
+    <script src="{% static 'js/annotator/src/overlaps.js' %}"></script>
+    <script src="{% static 'js/annotator/src/prominence.js' %}"></script>
+    <script src="{% static 'js/annotator/src/regions.js' %}"></script>
+    <script src="{% static 'js/childs.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/annotator/src/wavesurfer.labels.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/url.js' %}"></script>
+
+    <script type="text/javascript">
+
+
+        /************* For Print Class in Tree ***********/
+
+        var ci_json = {{ CI_JSON|safe }}
+        var classes_json = {{ CLASSES_JSON|safe }}
+
+        {#console.log('CI',ci_json);#}
+        {#console.log('Class',classes_json);#}
+
+        const classes_filtered = ci_json.map(instance => {
+            const Class = classes_json.filter(x => x.pk === instance.fields.class_obj)[0].fields;
+            let obj = {};
+            obj.id = instance.fields.class_obj;
+            obj.color = instance.fields.color;
+            obj.shortcut = instance.fields.shortcut;
+            obj.name = Class.name;
+            obj.root = Class.root;
+            return obj;
         });
 
-        wavesurfer.on('region-removed', function (region) {
-          if (!('event_id' in region.attributes)) {
-            return;
-          }
-          if (!('update_db' in region.attributes)) {
-            region.attributes['update_db'] = true;
-          }
-          setCurrentRegion(-1, '{{csrf_token}}');
-          redrawTagsForRegion();
-          redrawClassForRegion();
+        {#console.log('Class',classes_filtered);#}
 
-          if (region.attributes['update_db']) {
-            var region_data = {event_id: region.attributes['event_id']};
-            $.ajax({
-              type: "POST",
-              url: '{% url 'remove_event' %}',
-              dataType: 'json',
-              data: {
-                region_data: JSON.stringify(region_data),
-                csrfmiddlewaretoken: '{{csrf_token}}'
-              },
-              success: function (response) {
-                checkOverlaps();
-                handler.rearrangeLabels();
-              }
-            });
-          }
-          delete region.attributes['update_db'];
-        });
+        const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });
+        btns();
 
-        wavesurfer.on('region-dblclick', function (region, event) {
-          setCurrentRegion(region.id, '{{csrf_token}}');
-        });
+        const recreateButtonsEvents = () => {
+            $('.btn_mark').off('click');
+            $('.showOrHideChilds').off('click');
 
-        wavesurfer.on('region-click', function (region, event) {
-          if (event.button == 0 && event.ctrlKey == true && !REGIONS_STATE) {
-            event.stopPropagation();
-            event.preventDefault();
-            that.removeRegion(region, true)
-          }
-        });
+            btns();
+            markRegion();
+            eventShowOrHideChilds();
+        };
 
-        wavesurfer.on('ready', function () {
-          wavesurfer.initRegions()
-          wavesurfer.enableDragSelection({})
-
-          loadRegions(wavesurfer);
-          wavesurfer.play();
-          that.labels[0].rearrange();
-
-          var timeline = Object.create(WaveSurfer.Timeline);
-
-          timeline.init({
-            wavesurfer: wavesurfer,
-            container: '#waveform-timeline',
-            primaryLabelInterval: 1,
-            secondaryLabelInterval: 1
-          });
-        });
-      },
-
-      rearrangeLabels: function () {
-        that = this;
-        that.labels[0].rearrange();
-      },
-    };
-
-    wavesurferHandler.create = function () {
-      var handler = Object.create(wavesurferHandler);
-      handler.init();
-      return handler;
-    };
-
-    // init
-    var ALLOW_OVERLAPS = {% if project.overlap %}true{% else %}false{% endif %};
-    var CLASS_DICT = {{ class_dict|safe }};
-    var currentRegionId = -1;
-    var WAVESURFER_HEIGHT = 128;
-    var REGIONS_STATE = false;
-    var handler = new wavesurferHandler.create();
-    checkOverlaps()
-
-    function getPadding() {
-      return {{ padding }};
-    }
-
-    function loadRegions(wavesurfer) {
-      // Do it with AJAX and return all info for all regions
-      {% if regions %}
-        {% for region in regions %}
-          var tags = [];
-          {% for tag in region.tags.all %}
-            tags.push('{{ tag.name }}')
-          {% endfor %}
-          var region = handler.addRegion(wavesurfer, 'region', '{{ region.classes.all|join:" " }}', tags, {{ region.id }}, {{ region.start_time }} + {{ padding }}, {{ region.end_time }} + {{ padding }}, '{{ region.color }}', false);
-          {% if region.classes.count > 1 %}
-            region.attributes.classProminences = {};
-            {% for class_prominence in region.classes.all %}
-              region.attributes.classProminences['{{ class_prominence.class_obj.name }}'] = {{ class_prominence.prominence|default_if_none:'0' }};
-            {% endfor %}
-          {% endif %}
-        {% endfor %}
-        switchToRegionMode();
-      {% else %}
-        {% for event in events %}
-          var tags = [];
-          {% for tag in event.tags.all %}
-            tags.push('{{ tag.name }}')
-          {% endfor %}
-          handler.addRegion(wavesurfer, 'event', '{{ event.event_class|default_if_none:'' }}', tags, {{ event.id }}, {{ event.start_time }} + {{ padding }}, {{ event.end_time }} + {{ padding }}, '{{ event.color }}', false);
-        {% endfor %}
-      {% endif %}
-      setCurrentRegion(-1, '{{csrf_token}}');
-      checkOverlaps()
-    }
-
-    function updateEvent(region) {
-      var region_data = {
-        event_id: region.attributes['event_id'],
-        color: region.color,
-        start_time: region.start,
-        end_time: region.end,
-        event_class: region.attributes['class'],
-        tags: region.attributes['tags'],
-        padding: getPadding()
-      };
-
-      $.ajax({
-        type: "POST",
-        url: '../update_event/',
-        dataType: 'json',
-        data: {
-          region_data: JSON.stringify(region_data),
-          csrfmiddlewaretoken: '{{csrf_token}}'
-        },
-        success: function (response) {
+        function findDirectChilds(father){
+            return classes_filtered.filter(cclass => {if (cclass.root == father) return cclass })
         }
-      });
-    }
 
-    // WaveSurfer callbacks
-    function onRegionCreated(region) {
-      setCurrentRegion(-1, '{{csrf_token}}');
-      redrawTagsForRegion();
-      redrawClassForRegion();
-      if (!('class' in region.attributes)){
-        region.attributes['class'] = ""
-      }
-      if (!('tags' in region.attributes)){
-        region.attributes['tags'] = []
-      }
-      if (region.attributes['update_db']) {
-        if (typeof region.deleted != 'undefined') {
-          return;
+        function chargeChild(father){
+            const childs = findDirectChilds(father.dataset['classId']);
+            const childsDOM =  $(father).parent().find('div.childs li');
+
+            if(childs.length > 0 && childsDOM.length === 0) {
+
+                var UL = $('<ul></ul>');
+
+                const childsToInsert = childs.map(child => {
+
+                    var plus = findDirectChilds(child.id).length > 0 ?
+                         '<button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>': '';
+
+                    return `<li>
+                           <span>
+                                <button
+                                        data-class-id="${child.id}"
+                                        data-class-color="${child.color}"
+                                        data-class-name="${child.name}"
+                                        class="btn btn-primary btn_mark"
+                                        type="button"
+                                >
+                                    ${child.name}
+                                    <span class="shortcut">(${child.shortcut})</span>
+                                </button>`+plus+`
+                            <div class='childs'></div>
+                            </span>
+                        </li>`;
+                });
+
+                childsToInsert.forEach(function (htmlChild) {
+                    UL.append($(htmlChild))
+                });
+
+                $(father).parent().find('div.childs').html(UL);
+                recreateButtonsEvents();
+
+                switchBtnShowOrHide(father.nextSibling);
+            }
+        }
+
+        function toHideChild(btn){
+            $(btn).parent().find('> div.childs').html('');
+        }
+
+        function toShowChild(btn){
+            chargeChild($(btn).parent().find('> button.btn_mark')[0]);
+        }
+
+        function switchBtnShowOrHide(btn){
+
+            if(btn.dataset['classState'] === 'hide') {
+                btn.dataset['classState'] = 'show';
+                btn.classList.remove('fa-rotate-180');
+            }
+
+            else{
+                btn.dataset['classState']='hide';
+                btn.classList.add('fa-rotate-180');
+            }
+        }
+
+        function showOrHideChilds(e){
+
+            var btn = e.target;
+            console.log(e.target);
+
+
+            if(e.target.tagName==='SPAN')
+                btn=e.target.parentNode;
+
+            if (btn.dataset['classState']==='hide'){
+                toHideChild(btn);
+                switchBtnShowOrHide(btn);
+            }
+            else{
+                toShowChild(btn);
+            }
+
+        }
+
+        var eventShowOrHideChilds = () =>$('.showOrHideChilds').on('click',function(e){
+            showOrHideChilds(e);
+        });eventShowOrHideChilds();
+
+        wavesurferHandler = {
+            // contain all wavesurfers
+            wavesurfer: null,
+            labels: [],
+
+            init: function () {
+                this.setWavesurfer();
+            },
+
+            setWavesurfer: function () {
+                var colorMap = colormap({
+                    colormap: magma,
+                    nshades: 256,
+                    format: 'rgb',
+                    alpha: 1
+                });
+                var wavesurfer = WaveSurfer.create({
+                    container: '#waveform',
+                    waveColor: 'violet',
+                    progressColor: 'purple',
+                    normalize: true,
+                    fillParent: true,
+                    height: WAVESURFER_HEIGHT,
+                    colorMap: colorMap,
+                    fftSamples: WAVESURFER_HEIGHT * 2,
+                    hideScrollbar: true
+                });
+
+                wavesurfer.setVolume(1);
+                wavesurfer.params.visualization = '{{ visualization }}';
+                wavesurfer.load("{% url 'media' tmp_segment_path %}");
+
+                // Create label container
+                var labelsContainer = $('<div></div>')
+                    .addClass('labels');
+                $('#waveform').prepend(labelsContainer)
+                var labels = Object.create(WaveSurfer.Labels);
+                labels.init({
+                    wavesurfer: wavesurfer,
+                    container: '.labels'
+                });
+                this.labels.push(labels);
+
+                this.wavesurfer = wavesurfer;
+
+                this.bindEvents(wavesurfer);
+
+                return wavesurfer;
+            },
+
+            getWavesurfer: function() {
+                return this.wavesurfer;
+            },
+
+            addRegion: function(wavesurfer, type, classes, tags, id, start_time, end_time, color, update_db) {
+                var attrs = {
+                    'class': classes,
+                    'tags': tags,
+                    'update_db': update_db
+                };
+                if (type == 'event') {
+                    attrs['event_id'] = id
+                } else {
+                    attrs['region_id'] = id
+                }
+
+                var region = wavesurfer.addRegion({
+                    attributes: attrs,
+                    start: start_time,
+                    end: end_time,
+                    color: color,
+                    annotation: classes
+                });
+
+                return region;
+            },
+
+            removeRegion: function(region, update_db) {
+                region.attributes['update_db'] = update_db
+                region.remove();
+            },
+
+            getAllRegions: function() {
+                var regions = [];
+                for (var i in this.wavesurfer.regions.list) {
+                    regions.push(this.wavesurfer.regions.list[i]);
+                }
+                return regions;
+            },
+
+            findRegionById: function (id) {
+                if (this.wavesurfer.regions.list[id] != undefined) {
+                    return this.wavesurfer.regions.list[id];
+                } else {
+                    return null;
+                }
+            },
+
+            seekTo: function (position) {
+                this.wavesurfer.seekTo(position);
+            },
+
+            playPause: function () {
+                this.wavesurfer.playPause();
+            },
+
+            isPlaying: function () {
+                return this.wavesurfer.isPlaying();
+            },
+
+            enableDragSelection: function () {
+                this.wavesurfer.enableDragSelection({});
+            },
+
+            disableDragSelection: function () {
+                this.wavesurfer.disableDragSelection({});
+            },
+
+            bindEvents: function (wavesurfer) {
+                that = this;
+
+                wavesurfer.on('region-created', function (region) {
+                    // In case region was created by dragging. It is not possible to set it before.
+                    // Set to false because it is added in onRegionUpdateEnd.
+                    if (!('update_db' in region.attributes)) {
+                        region.attributes['update_db'] = false
+                    }
+                    onRegionCreated(region);
+                    delete region.attributes['update_db'];
+                });
+
+                wavesurfer.on('region-update-end', function (region, event, eventType) {
+                    if (eventType == 'drag') {
+                        return;
+                    }
+                    setTimeout(function () {
+                        var check_region = wavesurfer.regions.list[region.id];
+                        // region was deleted
+                        if (typeof check_region != 'undefined') {
+                            onRegionUpdateEnd(wavesurfer, region);
+                        }
+                    }, 50);
+                });
+
+                wavesurfer.on('region-removed', function (region) {
+                    if (!('event_id' in region.attributes)) {
+                        return;
+                    }
+                    if (!('update_db' in region.attributes)) {
+                        region.attributes['update_db'] = true;
+                    }
+                    setCurrentRegion(-1, '{{csrf_token}}');
+                    redrawTagsForRegion();
+                    redrawClassForRegion();
+
+                    if (region.attributes['update_db']) {
+                        var region_data = {event_id: region.attributes['event_id']};
+                        $.ajax({
+                            type: "POST",
+                            url: '{% url 'remove_event' %}',
+                            dataType: 'json',
+                            data: {
+                                region_data: JSON.stringify(region_data),
+                                csrfmiddlewaretoken: '{{csrf_token}}'
+                            },
+                            success: function (response) {
+                                checkOverlaps();
+                                handler.rearrangeLabels();
+                            }
+                        });
+                    }
+                    delete region.attributes['update_db'];
+                });
+
+                wavesurfer.on('region-dblclick', function (region, event) {
+                    setCurrentRegion(region.id, '{{csrf_token}}');
+                });
+
+                wavesurfer.on('region-click', function (region, event) {
+                    if (event.button == 0 && event.ctrlKey == true && !REGIONS_STATE) {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        that.removeRegion(region, true)
+                    }
+                });
+
+                wavesurfer.on('ready', function () {
+                    wavesurfer.initRegions()
+                    wavesurfer.enableDragSelection({})
+
+                    loadRegions(wavesurfer);
+                    wavesurfer.play();
+                    that.labels[0].rearrange();
+
+                    var timeline = Object.create(WaveSurfer.Timeline);
+
+                    timeline.init({
+                        wavesurfer: wavesurfer,
+                        container: '#waveform-timeline',
+                        primaryLabelInterval: 1,
+                        secondaryLabelInterval: 1
+                    });
+                });
+            },
+
+            rearrangeLabels: function () {
+                that = this;
+                that.labels[0].rearrange();
+            },
+        };
+
+        wavesurferHandler.create = function () {
+            var handler = Object.create(wavesurferHandler);
+            handler.init();
+            return handler;
+        };
+
+        // init
+        var ALLOW_OVERLAPS = {% if project.overlap %}true{% else %}false{% endif %};
+        var CLASS_DICT = {{ class_dict|safe }};
+        var currentRegionId = -1;
+        var WAVESURFER_HEIGHT = 128;
+        var REGIONS_STATE = false;
+        var handler = new wavesurferHandler.create();
+        checkOverlaps()
+
+        function getPadding() {
+            return {{ padding }};
+        }
+
+        function loadRegions(wavesurfer) {
+            // Do it with AJAX and return all info for all regions
+            {% if regions %}
+                {% for region in regions %}
+                    var tags = [];
+                    {% for tag in region.tags.all %}
+                        tags.push('{{ tag.name }}')
+                    {% endfor %}
+                    var region = handler.addRegion(wavesurfer, 'region', '{{ region.classes.all|join:" " }}', tags, {{ region.id }}, {{ region.start_time }} + {{ padding }}, {{ region.end_time }} + {{ padding }}, '{{ region.color }}', false);
+                    {% if region.classes.count > 1 %}
+                        region.attributes.classProminences = {};
+                        {% for class_prominence in region.classes.all %}
+                            region.attributes.classProminences['{{ class_prominence.class_obj.name }}'] = {{ class_prominence.prominence|default_if_none:'0' }};
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                switchToRegionMode();
+            {% else %}
+                {% for event in events %}
+                    var tags = [];
+                    {% for tag in event.tags.all %}
+                        tags.push('{{ tag.name }}')
+                    {% endfor %}
+                    handler.addRegion(wavesurfer, 'event', '{{ event.event_class|default_if_none:'' }}', tags, {{ event.id }}, {{ event.start_time }} + {{ padding }}, {{ event.end_time }} + {{ padding }}, '{{ event.color }}', false);
+                {% endfor %}
+            {% endif %}
+            setCurrentRegion(-1, '{{csrf_token}}');
+            checkOverlaps()
+        }
+
+        function updateEvent(region) {
+            var region_data = {
+                event_id: region.attributes['event_id'],
+                color: region.color,
+                start_time: region.start,
+                end_time: region.end,
+                event_class: region.attributes['class'],
+                tags: region.attributes['tags'],
+                padding: getPadding()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: '../update_event/',
+                dataType: 'json',
+                data: {
+                    region_data: JSON.stringify(region_data),
+                    csrfmiddlewaretoken: '{{csrf_token}}'
+                },
+                success: function (response) {
+                }
+            });
+        }
+
+        // WaveSurfer callbacks
+        function onRegionCreated(region) {
+            setCurrentRegion(-1, '{{csrf_token}}');
+            redrawTagsForRegion();
+            redrawClassForRegion();
+            if (!('class' in region.attributes)){
+                region.attributes['class'] = ""
+            }
+            if (!('tags' in region.attributes)){
+                region.attributes['tags'] = []
+            }
+            if (region.attributes['update_db']) {
+                if (typeof region.deleted != 'undefined') {
+                    return;
+                }
+                var region_data = {
+                    color: region.color,
+                    start_time: region.start,
+                    end_time: region.end,
+                    tags: region.attributes['tags'],
+                    classes: region.attributes['class'],
+                    padding: {{ padding }},
+                    annotation: '{{ annotation.id }}',
+                };
+                $.ajax({
+                    type: "POST",
+                    url: '../create_region/',
+                    dataType: 'json',
+                    data: {
+                        region_data: JSON.stringify(region_data),
+                        csrfmiddlewaretoken: '{{csrf_token}}'
+                    },
+                    success: function (data) {
+                        region.attributes.region_id = data.region_id
+                        region.attributes.classProminences = {}
+                        var classes = typeof region.attributes.class != 'undefined' ? region.attributes.class.split(' ') : [];
+                        for (var i = 0; i < classes.length; i++){
+                            region.attributes.classProminences[classes[i]] = 0
+                        }
+                    }
+                });
+            }
+        }
+
+        function onRegionUpdateEnd(wavesurfer, region) {
+            if (region.end - region.start < {{ padding }} / 10.) {
+                handler.removeRegion(region, false);
+            return;
+        }
+        if (!(avoidPaddingOnRegionUpdateEnd(region))) {
+            return;
+        }
+        if (ALLOW_OVERLAPS) {
+            adjustRegionLimits(region)
+        } else {
+            if (!(preventRegionOverlaps(region))) {
+                return;
+            }
         }
         var region_data = {
-          color: region.color,
-          start_time: region.start,
-          end_time: region.end,
-          tags: region.attributes['tags'],
-          classes: region.attributes['class'],
-          padding: {{ padding }},
-          annotation: '{{ annotation.id }}',
+            start_time: region.start,
+            end_time: region.end,
+            padding: {{ padding }},
+            annotation: '{{ annotation.id }}'
         };
+        if ('event_id' in region.attributes) {
+            region_data['event_id'] = region.attributes['event_id']
+        }
         $.ajax({
-          type: "POST",
-          url: '../create_region/',
-          dataType: 'json',
-          data: {
-            region_data: JSON.stringify(region_data),
-            csrfmiddlewaretoken: '{{csrf_token}}'
-          },
-          success: function (data) {
-            region.attributes.region_id = data.region_id
-            region.attributes.classProminences = {}
-            var classes = typeof region.attributes.class != 'undefined' ? region.attributes.class.split(' ') : [];
-            for (var i = 0; i < classes.length; i++){
-              region.attributes.classProminences[classes[i]] = 0
+            type: "POST",
+            url: '../update_end_event/',
+            dataType: 'json',
+            data: {
+                region_data: JSON.stringify(region_data),
+                csrfmiddlewaretoken: '{{csrf_token}}'
+            },
+            success: function (data) {
+                region.attributes['event_id'] = data.event_id;
+                if (!('class' in region.attributes)) {
+                    region.attributes['class'] = ""
+                }
+                if (!('tags' in region.attributes)) {
+                    region.attributes['tags'] = []
+                }
+                setCurrentRegion(region.id, '{{csrf_token}}');
+                checkOverlaps();
             }
-          }
         });
-      }
-    }
-
-    function onRegionUpdateEnd(wavesurfer, region) {
-      if (region.end - region.start < {{ padding }} / 10.) {
-        handler.removeRegion(region, false);
-        return;
-      }
-      if (!(avoidPaddingOnRegionUpdateEnd(region))) {
-        return;
-      }
-      if (ALLOW_OVERLAPS) {
-        adjustRegionLimits(region)
-      } else {
-        if (!(preventRegionOverlaps(region))) {
-          return;
         }
-      }
-      var region_data = {
-        start_time: region.start,
-        end_time: region.end,
-        padding: {{ padding }},
-        annotation: '{{ annotation.id }}'
-      };
-      if ('event_id' in region.attributes) {
-        region_data['event_id'] = region.attributes['event_id']
-      }
-      $.ajax({
-        type: "POST",
-        url: '../update_end_event/',
-        dataType: 'json',
-        data: {
-          region_data: JSON.stringify(region_data),
-          csrfmiddlewaretoken: '{{csrf_token}}'
-        },
-        success: function (data) {
-          region.attributes['event_id'] = data.event_id;
-          if (!('class' in region.attributes)) {
-            region.attributes['class'] = ""
-          }
-          if (!('tags' in region.attributes)) {
-            region.attributes['tags'] = []
-          }
-          setCurrentRegion(region.id, '{{csrf_token}}');
-          checkOverlaps();
-        }
-      });
-    }
 
-    $('#play-pause-main-button').on('click', function () {
-      handler.playPause();
-    });
+        $('#play-pause-main-button').on('click', function () {
+            handler.playPause();
+        });
 
-    $("#tag_button").click(function () {
-      var region = handler.findRegionById(currentRegionId),
-          tokens = $('#tags-input').tokenfield('getTokens'),
-          tags = [];
-      for (var i in tokens) {
-        tags.push(tokens[i].value);
-      }
-      if (region != null && tags.length) {
-        region.attributes.tags = getUniqueItems(tags.concat(region.attributes.tags));
-        updateEvent(region);
-        redrawTagsForRegion(region);
-      }
-    });
-
-    $('#back-annotations-button').on('click', function () {
-      back_data = {
-        annotation: '{{ annotation.id }}',
-        padding: {{ padding }}
-      }
-      backToAnnotation(back_data, '{{csrf_token}}');
-    });
-
-    $('#solve-overlaps-button').on('click', function () {
-      var allRegions = handler.getAllRegions();
-
-      var regionsWithoutClass = 0;
-      allRegions.forEach(function (region) {
-        if (typeof region.attributes.class == 'undefined' || region.attributes.class == 'None' || region.attributes.class == '') {
-          regionsWithoutClass += 1;
-        }
-      });
-
-      if (regionsWithoutClass) {
-        var modalWindow = $('#modal-window');
-        modalWindow.find('.modal-title').text('Wait a moment...');
-        modalWindow.find('.modal-body').html('Please, assign a class to all regions before starting to solve the overlaps.');
-        modalWindow.modal('show');
-        return;
-      }
-
-      $('body').removeClass('loaded');
-
-      solveOverlaps(allRegions);
-      switchToRegionMode();   
-    });
-
-    $('.class-btn').on('click', function () {
-      var region = handler.findRegionById(currentRegionId),
-          data = $(this).data();
-      var modalWindow = $('#modal-window');
-      var region = handler.findRegionById(currentRegionId),
-          data = $(this).data();
-      if ((region.end-region.start)<1 ){
-        modalWindow.find('.modal-title').text('Too small region');
-        modalWindow.find('.modal-body').text('Minimum size 1 second');
-        modalWindow.modal('show');
-        return null;
-
-      }
-
-
-      if (region == null || REGIONS_STATE) {
-        return null;
-      }
-      setClassForRegion(region, data.className, data.classColor);
-    });
-
-    $(".finish-annotation-button").on('click', function() {
-      var modalWindow = $('#modal-window');
-      if (ALLOW_OVERLAPS && checkOverlaps()) {
-        modalWindow.find('.modal-title').text('Wait a moment...');
-        modalWindow.find('.modal-body').text('Please, solve all the overlaps first');
-        modalWindow.modal('show');
-        return;
-      }
-      if (!checkClassProminenceIsFilled()) {
-        modalWindow.find('.modal-title').text('Wait a moment...');
-        modalWindow.find('.modal-body').text('Please, assign a prominence value to all regions with more than one class first');
-        modalWindow.modal('show');
-        return;
-      }
-
-      var loadNextAnnotation = $(this).data('load-next');
-
-
-      $.ajax({
-        type: "POST",
-        url: '{% url 'finish_annotation' id=annotation.id %}',
-        dataType: 'json',
-        beforeSend: function (xhr) {
-          xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
-        },
-        data: {'load next': loadNextAnnotation},
-        success: function (response) {
-          var modalWindow = $('#modal-window'),
-              text = 'Annotation is finished.';
-          if (!(REGIONS_STATE)) {
-            switchToRegionMode();
-          }
-          if (loadNextAnnotation == '1') {
-            // if have next annotation url - redirect
-            if (response.next_annotation_url != '') {
-              location.href = response.next_annotation_url;
-            } else {
-              text += '<p><b>There are no more segments to annotate for this project.</b></p>';
-              modalWindow.find('.modal-title').text('Success!');
-              modalWindow.find('.modal-body').html(text);
-              modalWindow.modal('show');
+        $("#tag_button").click(function () {
+            var region = handler.findRegionById(currentRegionId),
+                tokens = $('#tags-input').tokenfield('getTokens'),
+                tags = [];
+            for (var i in tokens) {
+                tags.push(tokens[i].value);
             }
-          } else {
-            modalWindow.find('.modal-title').text('Success!');
-            modalWindow.find('.modal-body').html(text);
-            modalWindow.modal('show');
-          }
-        }
-      });
-    });
+            if (region != null && tags.length) {
+                region.attributes.tags = getUniqueItems(tags.concat(region.attributes.tags));
+                updateEvent(region);
+                redrawTagsForRegion(region);
+            }
+        });
 
-    $('#tags-input').tokenfield();
+        $('#back-annotations-button').on('click', function () {
+            back_data = {
+                annotation: '{{ annotation.id }}',
+                padding: {{ padding }}
+            }
+            backToAnnotation(back_data, '{{csrf_token}}');
+        });
 
-    $('#switch-view').on('click', function () {
-      var parsedUrl = url.parse(location.href),
-          params = parsedUrl.get,
-          port = parsedUrl.port == undefined ? '': (':' + parsedUrl.port);
-      var wavesurfer = handler.getWavesurfer();
-      if ('visualization' in params) {
-        delete params['visualization'];
-      } else {
-        params['visualization'] = 1;
-      }
-      var newUrl = parsedUrl.scheme + '://' + parsedUrl.host + port + parsedUrl.path + '?' + $.param(params)
-      window.location = newUrl;
-    });
+        $('#solve-overlaps-button').on('click', function () {
+            var allRegions = handler.getAllRegions();
 
-  </script>
+            var regionsWithoutClass = 0;
+            allRegions.forEach(function (region) {
+                if (typeof region.attributes.class == 'undefined' || region.attributes.class == 'None' || region.attributes.class == '') {
+                    regionsWithoutClass += 1;
+                }
+            });
 
-  <script src="{% static 'js/annotator/src/hotkeys.js' %}"></script>
+            if (regionsWithoutClass) {
+                var modalWindow = $('#modal-window');
+                modalWindow.find('.modal-title').text('Wait a moment...');
+                modalWindow.find('.modal-body').html('Please, assign a class to all regions before starting to solve the overlaps.');
+                modalWindow.modal('show');
+                return;
+            }
+
+            $('body').removeClass('loaded');
+
+            solveOverlaps(allRegions);
+            switchToRegionMode();
+        });
+
+        const markRegion = () => $('.btn_mark').on('click', function () {
+            var region = handler.findRegionById(currentRegionId),
+                data = $(this).data();
+            var modalWindow = $('#modal-window');
+            var region = handler.findRegionById(currentRegionId),
+                data = $(this).data();
+            if ((region.end-region.start)<1 ){
+                modalWindow.find('.modal-title').text('Too small region');
+                modalWindow.find('.modal-body').text('Minimum size 1 second');
+                modalWindow.modal('show');
+                return null;
+
+            }
+
+
+            if (region == null || REGIONS_STATE) {
+                return null;
+            }
+            setClassForRegion(region, data.className, data.classColor);
+        });
+
+        markRegion();
+
+        $(".finish-annotation-button").on('click', function() {
+            var modalWindow = $('#modal-window');
+            if (ALLOW_OVERLAPS && checkOverlaps()) {
+                modalWindow.find('.modal-title').text('Wait a moment...');
+                modalWindow.find('.modal-body').text('Please, solve all the overlaps first');
+                modalWindow.modal('show');
+                return;
+            }
+            if (!checkClassProminenceIsFilled()) {
+                modalWindow.find('.modal-title').text('Wait a moment...');
+                modalWindow.find('.modal-body').text('Please, assign a prominence value to all regions with more than one class first');
+                modalWindow.modal('show');
+                return;
+            }
+
+            var loadNextAnnotation = $(this).data('load-next');
+
+
+            $.ajax({
+                type: "POST",
+                url: '{% url 'finish_annotation' id=annotation.id %}',
+                dataType: 'json',
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+                },
+                data: {'load next': loadNextAnnotation},
+                success: function (response) {
+                    var modalWindow = $('#modal-window'),
+                        text = 'Annotation is finished.';
+                    if (!(REGIONS_STATE)) {
+                        switchToRegionMode();
+                    }
+                    if (loadNextAnnotation == '1') {
+                        // if have next annotation url - redirect
+                        if (response.next_annotation_url != '') {
+                            location.href = response.next_annotation_url;
+                        } else {
+                            text += '<p><b>There are no more segments to annotate for this project.</b></p>';
+                            modalWindow.find('.modal-title').text('Success!');
+                            modalWindow.find('.modal-body').html(text);
+                            modalWindow.modal('show');
+                        }
+                    } else {
+                        modalWindow.find('.modal-title').text('Success!');
+                        modalWindow.find('.modal-body').html(text);
+                        modalWindow.modal('show');
+                    }
+                }
+            });
+        });
+
+        $('#tags-input').tokenfield();
+
+        $('#switch-view').on('click', function () {
+            var parsedUrl = url.parse(location.href),
+                params = parsedUrl.get,
+                port = parsedUrl.port == undefined ? '': (':' + parsedUrl.port);
+            var wavesurfer = handler.getWavesurfer();
+            if ('visualization' in params) {
+                delete params['visualization'];
+            } else {
+                params['visualization'] = 1;
+            }
+            var newUrl = parsedUrl.scheme + '://' + parsedUrl.host + port + parsedUrl.path + '?' + $.param(params)
+            window.location = newUrl;
+        });
+
+
+    </script>
+
+    <script src="{% static 'js/annotator/src/hotkeys.js' %}"></script>
 
 {% endblock %}

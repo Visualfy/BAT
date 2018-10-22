@@ -14,17 +14,23 @@ class Project(models.Model):
     overlap = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.name)
+        return self.name.encode('utf-8').strip()
 
 
 class Class(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    root = models.ForeignKey('self',on_delete=models.CASCADE,default = 1)
 
     class Meta:
         ordering = ('name',)
 
+    # def save(self, *args, **kwargs):
+    #     if isinstance(self.name, str):
+    #         self.name = self.name.decode("utf-8")
+    #     super(Class, self).save(*args, **kwargs)
+
     def __str__(self):
-        return str(self.name)
+        return self.name.encode('utf-8').strip()
 
 class ClassInstance(models.Model):
     project = models.ForeignKey('Project', on_delete=models.CASCADE)

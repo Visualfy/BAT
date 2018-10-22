@@ -6,11 +6,14 @@ import colorsys
 from aiorest_ws.utils.fields import to_choices_dict, flatten_choices_dict
 from annotation_tool import models
 
+import logging
 
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
     overlap = serializers.BooleanField(label='Allow class overlap in this project', default=False)
     classes = serializers.MultipleChoiceField(choices=[])
+
+    rootID = 1 #TODO fix first class. To be null or root or something like that.
 
     # Creation of the project and the required ClassInstance objects
     def create(self, validated_data):
@@ -22,31 +25,85 @@ class ProjectSerializer(serializers.Serializer):
         colors = []
         for i in xrange(n_colors):
             colors.append(colorsys.hsv_to_rgb(i / float(n_colors), 1, 1))
+
+        classes = models.Class.objects.all()
+
+        # logging.debug(classes)
+
         for i, class_name in enumerate(sorted(validated_data['classes'])):
-            c = models.Class.objects.get(name=class_name)
+
             rgba_color = "rgba(%d, %d, %d, 0.5)" % (255 * colors[i][0],
-                                                          255 * colors[i][1],
-                                                          255 * colors[i][2])
-            ci = models.ClassInstance.objects.create(project=project,
-                                                     class_obj=c,
-                                                     shortcut=i + 1,
-                                                     color=rgba_color)
+                                                    255 * colors[i][1],
+                                                    255 * colors[i][2])
+
+            c = models.Class.objects.get(name=class_name) # This line get selected classes
+
+            c.childs = self.getChildClass(classes, c.id)
+
+            if c.childs:
+                self.createCiChildClass(c.childs, rgba_color, project)
+
+            ci = models.ClassInstance.objects.create(
+                project=project,
+                class_obj=c,
+                shortcut=c.id, #TODO: Are you sure than this won't breack the app?
+                color=rgba_color
+            )
+
             ci.save()
 
         return project
 
+    # This function creates a recursively class instance of the passed class
+    # and all the children found in it.
+    def createCiChildClass(self, childs, rgba_color, project):
+        for cclass in childs:
+            ci = models.ClassInstance.objects.create(
+                project=project,
+                class_obj=cclass,
+                shortcut=cclass.id,  # TODO: Are you sure than this won't breack the app?
+                color=rgba_color
+            )
+
+            ci.save()
+
+            self.createCiChildClass(cclass.childs, rgba_color, project)
+
+    # This function GETS the children recursively and adds them to the
+    # "childs" attribute of the corresponding class.
+    def getChildClass (self, classes, rootID):
+        classChildTree = filter(lambda x: x.root.id == rootID and x.root.id != self.rootID, classes)
+
+        for cclass in classChildTree:
+            cclass.childs = self.getChildClass(classes, cclass.id)
+
+        return classChildTree
+
     # All the names of Class objects are loaded to the classes field
     # http://programtalk.com/python-examples/aiorest_ws.utils.fields.flatten_choices_dict/
     def __init__(self, *args, **kwargs):
-        classes = models.Class.objects.all()
+        classes = models.Class.objects.filter(root=1).exclude(name=self.rootID)
         class_dict = dict([(c.name, c.id) for c in classes])
         self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
-        self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)   
+        self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
         self.fields['classes'].choice_strings_to_values = {
             key: key for key in self.fields['classes'].choices.keys()
-        } 
+        }
         self.fields['classes'].allow_blank = kwargs.pop('allow_blank', False)
         super(ProjectSerializer, self).__init__(*args, **kwargs)
+
+        # Find Childs of all class and create a tree structure //TODO: comment when not necessary
+        classesWhereFind = models.Class.objects.all()
+        classTree = filter(lambda x: x.root.id == self.rootID, classesWhereFind)
+
+        for cclass in classTree:
+            cclass.childs = self.getChildClass(classesWhereFind, cclass.id)
+        #
+        # for cclass in classTree:
+        #     logging.debug(cclass.childs)
+        #     for cclass2 in cclass.childs:
+        #         logging.debug(cclass2.childs)
+
 
 
 class TagSerializer(serializers.Serializer):
@@ -55,6 +112,8 @@ class TagSerializer(serializers.Serializer):
 
 class ClassSerializer(serializers.Serializer):
     name = serializers.CharField(label='Class name', max_length=50)
+    classes = serializers.ChoiceField(label='Root Class',choices=[])
+
 
     def validate(self, data):
         objects = models.Class.objects.filter(name=data.get('name'))
@@ -64,11 +123,24 @@ class ClassSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
+
         validated_data['name'] = validated_data['name'].replace(' ', '_')
+        validated_data['root'] = models.Class.objects.get(name=validated_data['classes'])
+        del validated_data['classes']
         class_object = models.Class(**validated_data)
         class_object.save()
         return class_object
 
+    def __init__(self, *args, **kwargs):
+        classes = models.Class.objects.all()
+        class_dict = dict([(c.name, c.id) for c in classes])
+        self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
+        self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
+        self.fields['classes'].choice_strings_to_values = {
+            key: key for key in self.fields['classes'].choices.keys()
+        }
+        self.fields['classes'].allow_blank = kwargs.pop('allow_blank', False)
+        super(ClassSerializer,self).__init__(*args, **kwargs)
 
 class UploadDataSerializer(serializers.Serializer):
     project = serializers.PrimaryKeyRelatedField(queryset=models.Project.objects.all())
@@ -95,6 +167,7 @@ class UserRegistrationSerializer(serializers.Serializer):
                                              style={'input_type': 'password'})
 
     def validate(self, data):
+        print('hola')
         if data.get('password') != data.get('confirm_password'):
             raise serializers.ValidationError('Those passwords don\'t match.')
 
