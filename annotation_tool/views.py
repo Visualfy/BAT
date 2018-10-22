@@ -123,6 +123,7 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                             prominence=5)
                 cp.save()
                 utils.region_to_wav(segment, region, e.event_class)
+
         utils.update_annotation_status(annotation,
                                        new_status=models.Annotation.FINISHED)
 

@@ -28,8 +28,6 @@ class ProjectSerializer(serializers.Serializer):
 
         classes = models.Class.objects.all()
 
-        # logging.debug(classes)
-
         for i, class_name in enumerate(sorted(validated_data['classes'])):
 
             rgba_color = "rgba(%d, %d, %d, 0.5)" % (255 * colors[i][0],
