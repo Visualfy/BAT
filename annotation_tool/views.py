@@ -305,7 +305,9 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
             return HttpResponseRedirect(reverse('new_annotation'))
 
         context['classes'] = models.ClassInstance.objects.filter(
-            project=project).values_list('class_obj__name',
+            project=project).values_list('class_obj__id',
+                                         'class_obj__name',
+                                         'class_obj__root',
                                          'color',
                                          'shortcut').order_by('class_obj__name')
         context['prominence_choices'] = models.ClassProminence.PROMINENCE_CHOICES
@@ -322,6 +324,9 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
 
         context['visualization'] = self._get_visualization(request)
 
+
+        # TODO: Can be innecesary
+
         context['CI_JSON'] = serializers.serialize("json", models.ClassInstance.objects.filter(
             project=project))
 
@@ -331,6 +336,8 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
 
         context['CLASSES_JSON'] = serializers.serialize("json", filter(
             lambda Class: Class.id in arrayCiId  ,models.Class.objects.all()))
+
+        # TODO: until here
 
         return Response(context)
 
