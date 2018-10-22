@@ -46,51 +46,6 @@
             </button>
         </div>
 
-        <div class="row control-form">
-            <div class="col-md-1" id="class-panel-header">Class</div>
-
-            <div class="col-md-11">
-                {% for id, name, root, color, shortcut in classes %}
-                    {% if root == 1 %}
-                        {#                                      <div class="btn_mark" data-class-color="{{ color }}" data-class-name="{{ name }}">{{ name }} <span class="shortcut">({{ shortcut }})</span></div>#}
-                        <span>
-                            <button
-                                    data-class-id="{{ id }}"
-                                    data-class-color="{{ color }}"
-                                    data-class-name="{{ name }}"
-                                    class="btn btn-primary btn_mark"
-                                    type="button"
-                                    data-toggle="collapse"
-                                    data-target=".multi-collapse"
-                                    aria-expanded="false"
-                                    aria-controls="multiCollapseExample"
-                            >
-                                {{ name }}
-                                <span class="shortcut">({{ shortcut }})</span>
-                            </button>
-                            <div class="childs">
-
-                            </div>
-                        </span>
-                        {#                    {% else %}#}
-                        {#                        <div class="inline collapse multi-collapse" id="multiCollapseExample">#}
-                        {#                            <button#}
-                        {#                                    data-class-color="{{ color }}"#}
-                        {#                                    data-class-name="{{ name }}"#}
-                        {#                                    class="btn btn-primary btn_mark"#}
-                        {#                                    type="button"#}
-                        {#                                    data-toggle="collapse"#}
-                        {#                                    data-target=".multi-collapse"#}
-                        {#                                    aria-expanded="false"#}
-                        {#                                    aria-controls="multiCollapseExample"#}
-                        {#                            >#}
-                        {#                                {{ name }}#}
-                        {#                            </button>#}
-                        {#                        </div>#}
-                    {% endif %}
-                {% endfor %}
-            </div>
-        </div>
         <div class="row control-form tags-input-container">
             <div class="col-md-1" id="tags-panel-header">Tags</div>
             <div class="col-md-6">
@@ -105,6 +60,33 @@
             <div class="col-md-2"></div>
             <div class="col-md-7" id="tags-container"></div>
         </div>
+
+        <div class="row control-form">
+            <div class="col-md-1" id="class-panel-header">Class</div>
+
+            <div class="col-md-11">
+                {% for id, name, root, color, shortcut in classes %}
+                    {% if root == 1 %}
+                        <span class='parentButton'>
+                            <button
+                                    data-class-id="{{ id }}"
+                                    data-class-color="{{ color }}"
+                                    data-class-name="{{ name }}"
+                                    class="btn btn-primary btn_mark"
+                                    type="button"
+                            >
+                                {{ name }}
+                                <span class="shortcut">({{ shortcut }})</span>
+                            </button>
+                            <div class="childs">
+
+                            </div>
+                        </span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
         <div id="class-prominence-container">
             <div class="class-prominence-item fake-item">
                 <div class="prominence-label-container">
@@ -185,13 +167,25 @@
 
         {#console.log('Class',classes_filtered);#}
 
+        const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });
+        btns();
+
+        const recreateButtonsEvents = () => {
+            $('.btn_mark').off('click');
+            btns();
+            markRegion();
+        };
+
         const chargeChild = (father) =>{
             const childs = classes_filtered.filter(cclass => {if (cclass.root == father.dataset['classId']) return cclass });
+            const childsDOM =  $(father).parent().find('div.childs li').length;
 
-            var UL = $('<ul></ul>');
+            if(childs.length > 0 && childsDOM === 0) {
 
-            const childsToInsert = childs.map(child => {
-                return `<li>
+                var UL = $('<ul></ul>');
+
+                const childsToInsert = childs.map(child => {
+                    return `<li>
                            <span>
                                 <button
                                         data-class-id="${child.id}"
@@ -206,59 +200,16 @@
                             <div class='childs'></div>
                             </span>
                         </li>`;
-            });
+                });
 
-            console.log(childs);
+                childsToInsert.forEach(function (htmlChild) {
+                    UL.append($(htmlChild))
+                });
 
-            childsToInsert.forEach(function(htmlChild) {
-                UL.append($(htmlChild))
-            });
-
-            $(father).parent().find('div.childs').html(UL);
-            recreateButtonsEvents();
+                $(father).parent().find('div.childs').html(UL);
+                recreateButtonsEvents();
+            }
         };
-
-        const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });
-        btns();
-
-
-
-        const recreateButtonsEvents = () => {
-             $('.btn_mark').off('click');
-             btns();
-             markRegion();
-        };
-
-        {#classes_filtered.filter(x=>x.root===1).map(Class => {#}
-        {#    $('#classes_panel').append(`#}
-        {#        <div#}
-        {#            data-toggle="collapse"#}
-        {#            aria-expanded="false"#}
-        {#            aria-controls="collapseExample"#}
-        {#            class="class-btn"#}
-        {#            data-class-color="${Class.color}"#}
-        {#            data-class-name="${Class.name}"#}
-        {#        >#}
-        {#            ${Class.name}#}
-        {#            <span#}
-        {#                class="shortcut"#}
-        {#            >#}
-        {#                ${Class.shortcut}#}
-        {#            </span>#}
-        {#        </div>#}
-        {#        <div class="collapse" id="collapseExample">#}
-        {#            <div class="card card-body">#}
-        {#                Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.#}
-        {#            </div>#}
-        {#        </div>#}
-        {##}
-        {##}
-        {#        `#}
-        {#    )#}
-        //    });
-
-
-
 
         wavesurferHandler = {
             // contain all wavesurfers
