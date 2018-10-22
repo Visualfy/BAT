@@ -78,6 +78,7 @@
                                 {{ name }}
                                 <span class="shortcut">({{ shortcut }})</span>
                             </button>
+                           <button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>
                             <div class="childs">
 
                             </div>
@@ -176,7 +177,7 @@
             markRegion();
         };
 
-        const chargeChild = (father) =>{
+        function chargeChild(father){
             const childs = classes_filtered.filter(cclass => {if (cclass.root == father.dataset['classId']) return cclass });
             const childsDOM =  $(father).parent().find('div.childs li').length;
 
@@ -209,7 +210,37 @@
                 $(father).parent().find('div.childs').html(UL);
                 recreateButtonsEvents();
             }
-        };
+        }
+
+        function toHideChild(btn){
+            console.log(btn)
+        }
+
+        function toShowChild(btn){
+
+            console.log(btn)
+        }
+
+        function showOrHideChilds(e){
+
+            var btn = e.target;
+
+            if (btn.dataset['classState']==='hide'){
+                toShowChild(btn);
+                btn.dataset['classState']='show';
+                btn.classList.remove('fa-rotate-180')
+            }
+            else{
+                toHideChild(btn);
+                btn.dataset['classState']='hide';
+                btn.classList.add('fa-rotate-180')
+            }
+
+        }
+
+        $('.showOrHideChilds').on('click',function(e){
+           showOrHideChilds(e);
+        });
 
         wavesurferHandler = {
             // contain all wavesurfers
