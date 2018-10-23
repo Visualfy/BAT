@@ -195,19 +195,30 @@ def getPath(clas, classesWhereFind, path):
         path.append(rootClass.name)
         return getPath(rootClass, classesWhereFind, path)
     else:
-        return '/'.join(reversed(path))+'/'
+        # return '/'.join(reversed(path))+'/'
+        return path[::-1]
 
 def region_to_wav(segment,region,clas):
     classesWhereFind = models.Class.objects.all()
-    path = getPath(clas, classesWhereFind, [clas.name]).encode('utf8')
+    path = getPath(clas, classesWhereFind, [clas.name])
 
-    try:
-        os.mkdir(BASE_DIR + '/chunks/' + path)
-    except OSError:
-        pass
+    for index in range(len(path)):
+        pathFolder = []
+
+        for i in range(0,len(path)-(len(path)-index - 1)):
+            pathFolder.append(path[i])
+
+        pathFolderString = '/'.join(pathFolder) + '/'
+
+        try:
+            os.mkdir(BASE_DIR + '/chunks/' + pathFolderString)
+        except OSError:
+            pass
+
+    pathFolderString = '/'.join(path) + '/'
 
     input_file = os.path.join(MEDIA_ROOT, segment.wav.file.name)
-    output_file = 'chunks/' + path + str(clas) + '_' + str(region.id) + '_' + input_file.split('/')[-1]
+    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + input_file.split('/')[-1]
     start = segment.start_time + region.start_time
     end = segment.start_time + region.end_time
 
