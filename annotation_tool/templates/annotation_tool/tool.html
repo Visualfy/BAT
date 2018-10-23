@@ -149,7 +149,10 @@
 
         /************* For Print Class in Tree ***********/
 
+        //Instance Class of this project in JSON format
         var ci_json = {{ CI_JSON|safe }}
+
+        //Classes of this project in JSON format
         var classes_json = {{ CLASSES_JSON|safe }}
 
         const classes_filtered = ci_json.map(instance => {

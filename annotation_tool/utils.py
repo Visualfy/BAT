@@ -18,8 +18,6 @@ from django.contrib.contenttypes.models import ContentType
 from config.settings.common import BASE_DIR, MEDIA_ROOT
 from annotation_tool import models
 
-import logging;
-
 def create_project(name, creation_date):
     p = Project(name=name, creation_date=creation_date)
     p.save()
@@ -202,7 +200,6 @@ def getPath(clas, classesWhereFind, path):
 def region_to_wav(segment,region,clas):
     classesWhereFind = models.Class.objects.all()
     path = getPath(clas, classesWhereFind, [clas.name]).encode('utf8')
-    logging.debug(BASE_DIR + '/chunks/' + path)
 
     try:
         os.mkdir(BASE_DIR + '/chunks/' + path)
