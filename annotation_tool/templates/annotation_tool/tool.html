@@ -152,9 +152,6 @@
         var ci_json = {{ CI_JSON|safe }}
         var classes_json = {{ CLASSES_JSON|safe }}
 
-        {#console.log('CI',ci_json);#}
-        {#console.log('Class',classes_json);#}
-
         const classes_filtered = ci_json.map(instance => {
             const Class = classes_json.filter(x => x.pk === instance.fields.class_obj)[0].fields;
             let obj = {};
@@ -165,8 +162,6 @@
             obj.root = Class.root;
             return obj;
         });
-
-        {#console.log('Class',classes_filtered);#}
 
         const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });
         btns();
@@ -249,8 +244,6 @@
         function showOrHideChilds(e){
 
             var btn = e.target;
-            console.log(e.target);
-
 
             if(e.target.tagName==='SPAN')
                 btn=e.target.parentNode;
