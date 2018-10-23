@@ -16,7 +16,7 @@ from annotation_tool.models import Project, Class, Wav, Segment, Annotation, Eve
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from config.settings.common import BASE_DIR, MEDIA_ROOT
-
+from annotation_tool import models
 
 def create_project(name, creation_date):
     p = Project(name=name, creation_date=creation_date)
@@ -59,7 +59,7 @@ def create_segments(wav, duration, segments_length):
         else:
             number_of_segments = int(np.floor(number_of_segments))
         for i in xrange(number_of_segments):
-            
+
             start_time = i * float(segments_length)
             if i < number_of_segments - 1:
                 end_time = (i + 1) * float(segments_length)
@@ -187,14 +187,38 @@ def create_tmp_file(segment):
 
     return output_file, padding
 
+def getPath(clas, classesWhereFind, path):
+
+    rootClass = filter(lambda x: x.id == clas.root.id, classesWhereFind)[0]
+
+    if(rootClass.id != 1):
+        path.append(rootClass.name)
+        return getPath(rootClass, classesWhereFind, path)
+    else:
+        # return '/'.join(reversed(path))+'/'
+        return path[::-1]
+
 def region_to_wav(segment,region,clas):
-    try:
-        os.mkdir(BASE_DIR + '/chunks/')
-    except OSError:
-        pass
+    classesWhereFind = models.Class.objects.all()
+    path = getPath(clas, classesWhereFind, [clas.name])
+
+    for index in range(len(path)):
+        pathFolder = []
+
+        for i in range(0,len(path)-(len(path)-index - 1)):
+            pathFolder.append(path[i])
+
+        pathFolderString = '/'.join(pathFolder) + '/'
+
+        try:
+            os.mkdir(BASE_DIR + '/chunks/' + pathFolderString)
+        except OSError:
+            pass
+
+    pathFolderString = '/'.join(path) + '/'
 
     input_file = os.path.join(MEDIA_ROOT, segment.wav.file.name)
-    output_file = 'chunks/' +str(clas)+'_'+ str(region.id)+'_' + input_file.split('/')[-1]
+    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + input_file.split('/')[-1]
     start = segment.start_time + region.start_time
     end = segment.start_time + region.end_time
 
@@ -230,7 +254,7 @@ def export_region_to_csv(wav, segment, region, annotator_name, output_csv):
     start_time = segment.start_time + region.start_time
     end_time = segment.start_time + region.end_time
     class_prominences = ClassProminence.objects.filter(
-                            region=region).order_by('class_obj__name')
+        region=region).order_by('class_obj__name')
     classes = []
     prominences = []
     for cp in class_prominences:
@@ -253,7 +277,7 @@ def export_annotation_to_csv(annotation, annotator_name, output_csv):
     segment = annotation.segment
     wav = annotation.segment.wav
     regions = Region.objects.filter(
-                annotation=annotation).order_by('start_time')
+        annotation=annotation).order_by('start_time')
     for region in regions:
         export_region_to_csv(wav, segment, region, annotator_name, output_csv)
 
@@ -267,9 +291,9 @@ def export_ground_truth_to_csv(wavs, annotator_name, output_csv):
         gtwriter.writerow(['annotator', 'wav', 'start', 'end', 'classes',
                            'prominences', 'energy'])
     annotations = Annotation.objects.filter(segment__wav__in=wavs,
-                    user__username=annotator_name).order_by(
-                        'segment__wav__name',
-                        'segment__start_time')
+                                            user__username=annotator_name).order_by(
+        'segment__wav__name',
+        'segment__start_time')
     for annotation in tqdm(annotations):
         export_annotation_to_csv(annotation, annotator_name, output_csv)
 
