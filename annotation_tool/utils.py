@@ -197,12 +197,12 @@ def getPath(clas, classesWhereFind, path):
         path.append(rootClass.name)
         return getPath(rootClass, classesWhereFind, path)
     else:
-        return '/'.join(path)+'/'
+        return '/'.join(reversed(path))+'/'
 
 def region_to_wav(segment,region,clas):
     classesWhereFind = models.Class.objects.all()
-    path = getPath(clas, classesWhereFind, []).encode('utf8')
-    logging.debug(path)
+    path = getPath(clas, classesWhereFind, [clas.name]).encode('utf8')
+    logging.debug(BASE_DIR + '/chunks/' + path)
 
     try:
         os.mkdir(BASE_DIR + '/chunks/' + path)
