@@ -6,7 +6,12 @@ import colorsys
 from aiorest_ws.utils.fields import to_choices_dict, flatten_choices_dict
 from annotation_tool import models
 
-import logging
+id = 'root'
+Class, created = models.Class.objects.get_or_create(name=id)
+
+if created:
+    Class.root = Class
+    Class.save()
 
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
@@ -112,6 +117,8 @@ class ClassSerializer(serializers.Serializer):
     name = serializers.CharField(label='Class name', max_length=50)
     classes = serializers.ChoiceField(label='Root Class',choices=[])
 
+    # newClass = models.Class.create('newClass', 1)
+    # logging.debug(newClass)
 
     def validate(self, data):
         objects = models.Class.objects.filter(name=data.get('name'))
@@ -121,7 +128,6 @@ class ClassSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-
         validated_data['name'] = validated_data['name'].replace(' ', '_')
         validated_data['root'] = models.Class.objects.get(name=validated_data['classes'])
         del validated_data['classes']
@@ -165,7 +171,6 @@ class UserRegistrationSerializer(serializers.Serializer):
                                              style={'input_type': 'password'})
 
     def validate(self, data):
-        print('hola')
         if data.get('password') != data.get('confirm_password'):
             raise serializers.ValidationError('Those passwords don\'t match.')
 

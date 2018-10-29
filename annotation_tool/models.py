@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.utils.text import slugify
 
+import logging
 
 class Project(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -19,15 +20,10 @@ class Project(models.Model):
 
 class Class(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    root = models.ForeignKey('self',on_delete=models.CASCADE,default = 1)
+    root = models.ForeignKey('self', on_delete=models.CASCADE, default=1, db_constraint=False )
 
     class Meta:
         ordering = ('name',)
-
-    # def save(self, *args, **kwargs):
-    #     if isinstance(self.name, str):
-    #         self.name = self.name.decode("utf-8")
-    #     super(Class, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name.encode('utf-8').strip()
@@ -55,7 +51,7 @@ class Wav(models.Model):
     upload_date = models.DateTimeField('upload date')
 
     def __str__(self):
-        return str(self.name)
+        return self.name.encode('utf-8').strip()
 
 
 @receiver(models.signals.post_delete, sender=Wav)
