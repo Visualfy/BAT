@@ -62,12 +62,11 @@
         </div>
 
         <div class="row control-form">
-            <div class="col-md-1" id="class-panel-header">Class</div>
+            <div class="col-md-12 text-left" id="class-panel-header"> Classes </div>
 
-            <div class="col-md-11">
-                {% for id, name, root, color, shortcut in classes %}
-                    {% if root == 1 %}
-                        <div class='parentButton'>
+                {% for id, name, rootName, root, color, shortcut in classes %}
+                    {% if rootName == 'root' and name != 'root'%}
+                        <div class='parentButton col-sm-12 col-md-6 col-lg-4 '>
                             <button
                                     data-class-id="{{ id }}"
                                     data-class-color="{{ color }}"
@@ -85,7 +84,6 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-            </div>
         </div>
 
         <div id="class-prominence-container">
@@ -145,7 +143,6 @@
     <script type="text/javascript" src="{% static 'js/url.js' %}"></script>
 
     <script type="text/javascript">
-
 
         /************* For Print Class in Tree ***********/
 

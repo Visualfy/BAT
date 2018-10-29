@@ -8,15 +8,24 @@ from annotation_tool import models
 
 import logging
 
+id = 'root'
+Class, created = models.Class.objects.get_or_create(name=id)
+rootID = Class.id
+
+if created:
+    Class.root = Class
+    Class.save()
+
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
     overlap = serializers.BooleanField(label='Allow class overlap in this project', default=False)
     classes = serializers.MultipleChoiceField(choices=[])
 
-    rootID = 1 #TODO fix first class. To be null or root or something like that.
+    rootID = rootID
 
     # Creation of the project and the required ClassInstance objects
     def create(self, validated_data):
+
         project = models.Project(name=validated_data['project_name'],
                                  overlap=validated_data['overlap'],
                                  creation_date=timezone.now())
@@ -44,7 +53,7 @@ class ProjectSerializer(serializers.Serializer):
             ci = models.ClassInstance.objects.create(
                 project=project,
                 class_obj=c,
-                shortcut=c.id, #TODO: Are you sure than this won't breack the app?
+                shortcut=c.id,
                 color=rgba_color
             )
 
@@ -70,8 +79,9 @@ class ProjectSerializer(serializers.Serializer):
     # This function GETS the children recursively and adds them to the
     # "childs" attribute of the corresponding class.
     def getChildClass (self, classes, rootID):
-        classChildTree = filter(lambda x: x.root.id == rootID and x.root.id != self.rootID, classes)
+        classChildTree = filter(lambda x: x.root.id == rootID and x.name != id, classes)
 
+        logging.debug(classChildTree)
         for cclass in classChildTree:
             cclass.childs = self.getChildClass(classes, cclass.id)
 
@@ -80,7 +90,7 @@ class ProjectSerializer(serializers.Serializer):
     # All the names of Class objects are loaded to the classes field
     # http://programtalk.com/python-examples/aiorest_ws.utils.fields.flatten_choices_dict/
     def __init__(self, *args, **kwargs):
-        classes = models.Class.objects.filter(root=1).exclude(name=self.rootID)
+        classes = models.Class.objects.filter(root=rootID).exclude(name=self.rootID)
         class_dict = dict([(c.name, c.id) for c in classes])
         self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
         self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
@@ -112,7 +122,6 @@ class ClassSerializer(serializers.Serializer):
     name = serializers.CharField(label='Class name', max_length=50)
     classes = serializers.ChoiceField(label='Root Class',choices=[])
 
-
     def validate(self, data):
         objects = models.Class.objects.filter(name=data.get('name'))
         if objects:
@@ -121,7 +130,6 @@ class ClassSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-
         validated_data['name'] = validated_data['name'].replace(' ', '_')
         validated_data['root'] = models.Class.objects.get(name=validated_data['classes'])
         del validated_data['classes']
@@ -165,7 +173,6 @@ class UserRegistrationSerializer(serializers.Serializer):
                                              style={'input_type': 'password'})
 
     def validate(self, data):
-        print('hola')
         if data.get('password') != data.get('confirm_password'):
             raise serializers.ValidationError('Those passwords don\'t match.')
 

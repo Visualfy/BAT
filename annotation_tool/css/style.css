@@ -31,7 +31,7 @@
 
 #class-panel-header {
     padding-top: 2px;
-    text-align: right;
+    /*text-align: right;*/
 }
 .classes-container {
     margin-top: 60px;
@@ -232,4 +232,41 @@ tag {
 
 tag span {
     font-size: 10px;
+}
+
+.childs li{
+    list-style: none;
+    margin-top: 4px;
+    margin-bottom: 4px;
+
+}
+
+.childs ul{
+    padding-left: 16px;
+    margin-top: 8px;
+}
+
+.parentButton{
+    margin-bottom: 16px;
+}
+
+button.showOrHideChilds{
+    padding: 14px;
+    margin-left: 4px;
+}
+
+button.delete-item{
+    margin-left: 4px;
+}
+
+button#add-item-button, #class-panel-header{
+    margin-bottom: 14px;
+}
+
+.fa-rotate-180 {
+    -webkit-transform: rotate(180deg);
+    -moz-transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    -o-transform: rotate(180deg);
+    transform: rotate(180deg);
 }
