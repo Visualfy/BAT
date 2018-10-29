@@ -233,3 +233,28 @@ tag {
 tag span {
     font-size: 10px;
 }
+
+.childs li{
+    list-style: none;
+    margin-top: 4px;
+    margin-bottom: 4px;
+
+}
+
+.childs ul{
+    padding-left: 16px;
+    margin-top: 8px;
+}
+
+.parentButton{
+    margin-bottom: 16px;
+}
+
+button.showOrHideChilds{
+    padding: 14px;
+    margin-left: 4px;
+}
+
+button.delete-item{
+    margin-left: 4px;
+}
