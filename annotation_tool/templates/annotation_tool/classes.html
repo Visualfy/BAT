@@ -88,14 +88,132 @@
     {% else %}
         <p>No data is available.</p>
     {% endif %}
-{% endblock %}
 
 
 <script type="text/javascript">
 
 
     /************* For Print Class in Tree ***********/
+    let classes = {{JSON_CLASSES|safe}};
+    console.log(classes);
 
-    console.log('allRight')
+
+     {#//Instance Class of this project in JSON format#}
+     {#   var ci_json = {{ CI_JSON|safe }}#}
+     {##}
+     {#   //Classes of this project in JSON format#}
+     {#   var classes_json = {{ CLASSES_JSON|safe }}#}
+     {##}
+     {#   const classes_filtered = ci_json.map(instance => {#}
+     {#       const Class = classes_json.filter(x => x.pk === instance.fields.class_obj)[0].fields;#}
+     {#       let obj = {};#}
+     {#       obj.id = instance.fields.class_obj;#}
+     {#       obj.color = instance.fields.color;#}
+     {#       obj.shortcut = instance.fields.shortcut;#}
+     {#       obj.name = Class.name;#}
+     {#       obj.root = Class.root;#}
+     {#       return obj;#}
+     {#   });#}
+     {##}
+     {#   const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });#}
+     {#   btns();#}
+     {##}
+     {#   const recreateButtonsEvents = () => {#}
+     {#       $('.btn_mark').off('click');#}
+     {#       $('.showOrHideChilds').off('click');#}
+     {##}
+     {#       btns();#}
+     {#       markRegion();#}
+     {#       eventShowOrHideChilds();#}
+     {#   };#}
+     {##}
+     {#   function findDirectChilds(father){#}
+     {#       return classes_filtered.filter(cclass => {if (cclass.root == father) return cclass })#}
+     {#   }#}
+     {##}
+     {#   function chargeChild(father){#}
+     {#       const childs = findDirectChilds(father.dataset['classId']);#}
+     {#       const childsDOM =  $(father).parent().find('div.childs li');#}
+     {##}
+     {#       if(childs.length > 0 && childsDOM.length === 0) {#}
+     {##}
+     {#           var UL = $('<ul></ul>');#}
+     {##}
+     {#           const childsToInsert = childs.map(child => {#}
+     {##}
+     {#               var plus = findDirectChilds(child.id).length > 0 ?#}
+     {#                    '<button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>': '';#}
+     {##}
+     {#               return `<li>#}
+     {#                      <span>#}
+     {#                           <button#}
+     {#                                   data-class-id="${child.id}"#}
+     {#                                   data-class-color="${child.color}"#}
+     {#                                   data-class-name="${child.name}"#}
+     {#                                   class="btn btn-primary btn_mark"#}
+     {#                                   type="button"#}
+     {#                           >#}
+     {#                               ${child.name}#}
+     {#                               <span class="shortcut">(${child.shortcut})</span>#}
+     {#                           </button>`+plus+`#}
+     {#                       <div class='childs'></div>#}
+     {#                       </span>#}
+     {#                   </li>`;#}
+     {#           });#}
+     {##}
+     {#           childsToInsert.forEach(function (htmlChild) {#}
+     {#               UL.append($(htmlChild))#}
+     {#           });#}
+     {##}
+     {#           $(father).parent().find('div.childs').html(UL);#}
+     {#           recreateButtonsEvents();#}
+     {##}
+     {#           switchBtnShowOrHide(father.nextSibling);#}
+     {#       }#}
+     {#   }#}
+     {##}
+     {#   function toHideChild(btn){#}
+     {#       $(btn).parent().find('> div.childs').html('');#}
+     {#   }#}
+     {##}
+     {#   function toShowChild(btn){#}
+     {#       chargeChild($(btn).parent().find('> button.btn_mark')[0]);#}
+     {#   }#}
+     {##}
+     {#   function switchBtnShowOrHide(btn){#}
+     {##}
+     {#       if(btn.dataset['classState'] === 'hide') {#}
+     {#           btn.dataset['classState'] = 'show';#}
+     {#           btn.classList.remove('fa-rotate-180');#}
+     {#       }#}
+     {##}
+     {#       else{#}
+     {#           btn.dataset['classState']='hide';#}
+     {#           btn.classList.add('fa-rotate-180');#}
+     {#       }#}
+     {#   }#}
+     {##}
+     {#   function showOrHideChilds(e){#}
+     {##}
+     {#       var btn = e.target;#}
+     {##}
+     {#       if(e.target.tagName==='SPAN')#}
+     {#           btn=e.target.parentNode;#}
+     {##}
+     {#       if (btn.dataset['classState']==='hide'){#}
+     {#           toHideChild(btn);#}
+     {#           switchBtnShowOrHide(btn);#}
+     {#       }#}
+     {#       else{#}
+     {#           toShowChild(btn);#}
+     {#       }#}
+     {##}
+     {#   }#}
+     {##}
+     {#   var eventShowOrHideChilds = () =>$('.showOrHideChilds').on('click',function(e){#}
+     {#       showOrHideChilds(e);#}
+     {#   });eventShowOrHideChilds();#}
 
 </script>
+
+{% endblock %}

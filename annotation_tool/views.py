@@ -153,6 +153,7 @@ class ClassesView(SuperuserRequiredMixin, GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         return Response({'query_data': self.get_queryset(),
+                         'JSON_CLASSES':serializers.serialize("json", self.get_queryset()),
                          'serializer': self.get_serializer(),
                          'variable':self.queryset,
                          'errors': None})
