@@ -119,6 +119,10 @@
         /************* For Print Class in Tree ***********/
         let classes_json = {{JSON_CLASSES|safe}};
 
+        let path = window.location.pathname.split('/');
+        path.splice(path.length-2,2);
+        const URL = path.join('/').concat('/');
+
         const classes_filtered = classes_json.map(Class => {
             let obj = {};
             obj.id = Class.pk;
@@ -127,23 +131,24 @@
             return obj;
         });
 
+        const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild( e.target ) });
+        btns();
 
-        {#const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });#}
-        {#btns();#}
+        const recreateButtonsEvents = () => {
+            $('.btn_mark').off('click');
+            $('.showOrHideChilds').off('click');
 
-        {#   const recreateButtonsEvents = () => {#}
-        {#       $('.btn_mark').off('click');#}
-        {#       $('.showOrHideChilds').off('click');#}
-
-        {#       btns();#}
-        {#       eventShowOrHideChilds();#}
-        {#   };#}
+            btns();
+            eventShowOrHideChilds();
+            recreateDelete();
+        };
 
         function findDirectChilds(father){
             return classes_filtered.filter(cclass => {if (cclass.root == father) return cclass })
         }
 
         function chargeChild(father){
+
             const childs = findDirectChilds(father.dataset['classId']);
             const childsDOM =  $(father).parent().find('div.childs li');
 
@@ -152,22 +157,21 @@
                 var UL = $('<ul></ul>');
 
                 const childsToInsert = childs.map(child => {
-
-                    var plus = findDirectChilds(child.id).length > 0 ?
+                    const plus = findDirectChilds(child.id).length > 0 ?
                         '<button type="button" data-class-state="show" class="showOrHideChilds btn btn-default"><span class="caret"></span></button>': '';
-
+                    const del = `<button data-delete-url="${URL}class/${child.id}" class="btn btn-danger delete-item"
+                                data-toggle="modal"data-target="#delete-modal">X</button>`;
                     return `<li>
                               <span>
                                    <button
                                            data-class-id="${child.id}"
-                                           data-class-color="${child.color}"
                                            data-class-name="${child.name}"
+                                           data-class-root="${child.root}"
                                            class="btn btn-primary btn_mark"
                                            type="button"
                                    >
                                        ${child.name}
-                                       <span class="shortcut">(${child.shortcut})</span>
-                                   </button>`+plus+`
+                                   </button>`+del+plus+`
                                <div class='childs'></div>
                                </span>
                            </li>`;
@@ -180,51 +184,73 @@
                 $(father).parent().find('div.childs').html(UL);
                 recreateButtonsEvents();
 
-                switchBtnShowOrHide(father.nextSibling);
+
+                switchBtnShowOrHide($(father).parent().find('> button.showOrHideChilds')[0]);
             }
         }
 
-        {#   function toHideChild(btn){#}
-        {#       $(btn).parent().find('> div.childs').html('');#}
-        {#   }#}
-        {##}
-        {#   function toShowChild(btn){#}
-        {#       chargeChild($(btn).parent().find('> button.btn_mark')[0]);#}
-        {#   }#}
-        {##}
-        {#   function switchBtnShowOrHide(btn){#}
-        {##}
-        {#       if(btn.dataset['classState'] === 'hide') {#}
-        {#           btn.dataset['classState'] = 'show';#}
-        {#           btn.classList.remove('fa-rotate-180');#}
-        {#       }#}
-        {##}
-        {#       else{#}
-        {#           btn.dataset['classState']='hide';#}
-        {#           btn.classList.add('fa-rotate-180');#}
-        {#       }#}
-        {#   }#}
-        {##}
-        {#   function showOrHideChilds(e){#}
-        {##}
-        {#       var btn = e.target;#}
-        {##}
-        {#       if(e.target.tagName==='SPAN')#}
-        {#           btn=e.target.parentNode;#}
-        {##}
-        {#       if (btn.dataset['classState']==='hide'){#}
-        {#           toHideChild(btn);#}
-        {#           switchBtnShowOrHide(btn);#}
-        {#       }#}
-        {#       else{#}
-        {#           toShowChild(btn);#}
-        {#       }#}
-        {##}
-        {#   }#}
-        {##}
-        {#   var eventShowOrHideChilds = () =>$('.showOrHideChilds').on('click',function(e){#}
-        {#       showOrHideChilds(e);#}
-        {#   });eventShowOrHideChilds();#}
+        function toHideChild(btn){
+            $(btn).parent().find('> div.childs').html('');
+        }
+
+        function toShowChild(btn){
+            chargeChild($(btn).parent().find('> button.btn_mark')[0]);
+        }
+
+        function switchBtnShowOrHide(btn){
+
+            if(btn.dataset['classState'] === 'hide') {
+                btn.dataset['classState'] = 'show';
+                btn.classList.remove('fa-rotate-180');
+            }
+
+            else{
+                btn.dataset['classState']='hide';
+                btn.classList.add('fa-rotate-180');
+            }
+        }
+
+        function showOrHideChilds(e){
+
+            var btn = e.target;
+            if(e.target.tagName==='SPAN')
+                btn= e.target.parentNode;
+
+            if (btn.dataset['classState']==='hide'){
+                toHideChild(btn);
+                switchBtnShowOrHide(btn);
+            }
+            else{
+                toShowChild(btn);
+            }
+
+        }
+
+        var eventShowOrHideChilds = () =>$('.showOrHideChilds').on('click',function(e){
+            showOrHideChilds(e);
+        });eventShowOrHideChilds();
+
+        recreateDelete();
+        function recreateDelete(){
+            $('.delete-item').off('click');
+            $('.delete-item').on('click', function () {
+                var url = $(this).data('delete-url');
+                $('#delete-url').val(url);
+            });
+            $('#delete-button').on('click', function () {
+                $.ajax({
+                    url: $('#delete-url').val(),
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
+                    },
+                    type: 'DELETE',
+                    success: function () {
+                        //reset page
+                        location.reload()
+                    }
+                });
+            });
+        }
 
     </script>
 
