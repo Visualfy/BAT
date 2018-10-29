@@ -22,7 +22,7 @@ $(function () {
   if (typeof TAGS_NAMES != 'undefined') {
     $('#tokenfield').tokenfield({
       autocomplete: {
-        source: TAGS_NAM1ES,
+        source: TAGS_NAMES,
         delay: 100
       },
       showAutocompleteOnFocus: true
