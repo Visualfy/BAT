@@ -69,7 +69,7 @@
                 <th>Root class</th>
             </tr>
             {% for class in query_data %}
-{#                {% if class.id is not 1 %}#}
+                {% if class.name != 'root' %}
                     <tr>
                         <td>{{ class.id }}</td>
                         <td>{{ class.name }}</td>
@@ -80,10 +80,10 @@
                             </button>
                         </td>
                     </tr>
-{#                {%endif %}#}
+                {%endif %}
             {% endfor %}
         </table>
-        <p>Displaying {{ query_data|length }} classes ordered by ID.</p>
+        <p>Displaying {{ query_data|length|add:"-1" }} classes ordered by ID.</p>
         {% include 'annotation_tool/_modal_delete.html' with text='Are you sure you want to delete this class?' %}
     {% else %}
         <p>No data is available.</p>

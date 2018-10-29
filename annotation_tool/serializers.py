@@ -8,6 +8,7 @@ from annotation_tool import models
 
 id = 'root'
 Class, created = models.Class.objects.get_or_create(name=id)
+rootID = Class.id
 
 if created:
     Class.root = Class
@@ -18,7 +19,7 @@ class ProjectSerializer(serializers.Serializer):
     overlap = serializers.BooleanField(label='Allow class overlap in this project', default=False)
     classes = serializers.MultipleChoiceField(choices=[])
 
-    rootID = 1 #TODO fix first class. To be null or root or something like that.
+    rootID = rootID
 
     # Creation of the project and the required ClassInstance objects
     def create(self, validated_data):
@@ -49,7 +50,7 @@ class ProjectSerializer(serializers.Serializer):
             ci = models.ClassInstance.objects.create(
                 project=project,
                 class_obj=c,
-                shortcut=c.id, #TODO: Are you sure than this won't breack the app?
+                shortcut=c.id,
                 color=rgba_color
             )
 
@@ -85,7 +86,7 @@ class ProjectSerializer(serializers.Serializer):
     # All the names of Class objects are loaded to the classes field
     # http://programtalk.com/python-examples/aiorest_ws.utils.fields.flatten_choices_dict/
     def __init__(self, *args, **kwargs):
-        classes = models.Class.objects.filter(root=1).exclude(name=self.rootID)
+        classes = models.Class.objects.filter(root=rootID).exclude(name=self.rootID)
         class_dict = dict([(c.name, c.id) for c in classes])
         self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
         self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
@@ -116,9 +117,6 @@ class TagSerializer(serializers.Serializer):
 class ClassSerializer(serializers.Serializer):
     name = serializers.CharField(label='Class name', max_length=50)
     classes = serializers.ChoiceField(label='Root Class',choices=[])
-
-    # newClass = models.Class.create('newClass', 1)
-    # logging.debug(newClass)
 
     def validate(self, data):
         objects = models.Class.objects.filter(name=data.get('name'))
