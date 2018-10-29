@@ -308,6 +308,7 @@ class NewAnnotationView(LoginRequiredMixin, GenericAPIView):
         context['classes'] = models.ClassInstance.objects.filter(
             project=project).values_list('class_obj__id',
                                          'class_obj__name',
+                                         'class_obj__root__name',
                                          'class_obj__root',
                                          'color',
                                          'shortcut').order_by('class_obj__name')

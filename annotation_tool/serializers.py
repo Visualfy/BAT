@@ -6,6 +6,8 @@ import colorsys
 from aiorest_ws.utils.fields import to_choices_dict, flatten_choices_dict
 from annotation_tool import models
 
+import logging
+
 id = 'root'
 Class, created = models.Class.objects.get_or_create(name=id)
 rootID = Class.id
@@ -23,6 +25,7 @@ class ProjectSerializer(serializers.Serializer):
 
     # Creation of the project and the required ClassInstance objects
     def create(self, validated_data):
+
         project = models.Project(name=validated_data['project_name'],
                                  overlap=validated_data['overlap'],
                                  creation_date=timezone.now())
@@ -76,8 +79,9 @@ class ProjectSerializer(serializers.Serializer):
     # This function GETS the children recursively and adds them to the
     # "childs" attribute of the corresponding class.
     def getChildClass (self, classes, rootID):
-        classChildTree = filter(lambda x: x.root.id == rootID and x.root.id != self.rootID, classes)
+        classChildTree = filter(lambda x: x.root.id == rootID and x.name != id, classes)
 
+        logging.debug(classChildTree)
         for cclass in classChildTree:
             cclass.childs = self.getChildClass(classes, cclass.id)
 

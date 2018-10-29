@@ -65,8 +65,8 @@
             <div class="col-md-1" id="class-panel-header">Class</div>
 
             <div class="col-md-11">
-                {% for id, name, root, color, shortcut in classes %}
-                    {% if root == 1 %}
+                {% for id, name, rootName, root, color, shortcut in classes %}
+                    {% if rootName == 'root' and name != 'root'%}
                         <div class='parentButton'>
                             <button
                                     data-class-id="{{ id }}"
@@ -165,6 +165,8 @@
             obj.root = Class.root;
             return obj;
         });
+
+        console.log(classes_filtered);
 
         const btns = () => $('.btn_mark').on('click', function ( e ) { chargeChild(e.target) });
         btns();
