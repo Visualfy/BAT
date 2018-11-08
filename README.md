@@ -39,26 +39,30 @@ Install and run BAT locally or on a server:
 5. Build BAT.
 
 `$ (sudo) docker-compose build`
+
+6. You need to update database fields.  
+`$ (sudo) docker-compose run django python manage.py makemigrations`  
+`$ (sudo) docker-compose run django python manage.py migrate`
     
-6. Now you can add an admin user.
+7. Now you can add an admin user.
 
 `$ (sudo) docker-compose run django python manage.py createsuperuser`
 
-7. Run BAT locally or on a server.
+8. Run BAT locally or on a server.
 
 `$ (sudo) docker-compose up`
 
-8. Open http://localhost:8003/annotation_tool/ or **http://<your_server>:8003/annotation_tool/** in your browser. You can change the port in docker-compose.yml.
+9. Open http://localhost:8003/annotation_tool/ or **http://<your_server>:8003/annotation_tool/** in your browser. You can change the port in docker-compose.yml.
 
-9. To close BAT, open a new terminal, go to the directory of the repository and type:
+10. To close BAT, open a new terminal, go to the directory of the repository and type:
 
 `$ (sudo) docker-compose down`
 
-10. To access the database using the DJANGO shell: (to close it use 9.)
+11. To access the database using the DJANGO shell: (to close it use 9.)
 
 `$ (sudo) docker-compose run django python manage.py shell`
 
-11. To log into the postgresql database:
+12. To log into the postgresql database:
 
 `$ (sudo) docker ps -a` (indentify which is the postgresql container)
 
