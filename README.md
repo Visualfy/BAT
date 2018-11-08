@@ -18,55 +18,53 @@ Install and run BAT locally or on a server:
 
 1. Install docker and docker-compose. For the details on docker installation you can use [the official documentation guide](https://docs.docker.com/engine/installation/linux/ubuntulinux/)
 
-
 2. Clone the **master** branch of this repository.
-
 
 3. Create file named **.env** in the project root (near the **docker-compose.yml** file) with the following text:
 
-`DJANGO_SETTINGS_MODULE=config.settings.local`
+    `DJANGO_SETTINGS_MODULE=config.settings.local`
 
-`POSTGRES_PASSWORD=change_this_password`
+    `POSTGRES_PASSWORD=change_this_password`
 
-`POSTGRES_USER=change_this_user`
+    `POSTGRES_USER=change_this_user`
 
-`DJANGO_SECRET_KEY=insert_a_long_string_with_ascii_chars`
+    `DJANGO_SECRET_KEY=insert_a_long_string_with_ascii_chars`
 
 4. Stop the postgresql service on your computer (if it exist).
 
-`$ sudo service postgresql stop`
+    `$ sudo service postgresql stop`
 
 5. Build BAT.
 
-`$ (sudo) docker-compose build`
+    `$ (sudo) docker-compose build`
 
 6. You need to update database fields.  
-`$ (sudo) docker-compose run django python manage.py makemigrations`  
-`$ (sudo) docker-compose run django python manage.py migrate`
+    `$ (sudo) docker-compose run django python manage.py makemigrations`  
+    `$ (sudo) docker-compose run django python manage.py migrate`
     
 7. Now you can add an admin user.
 
-`$ (sudo) docker-compose run django python manage.py createsuperuser`
+    `$ (sudo) docker-compose run django python manage.py createsuperuser`
 
 8. Run BAT locally or on a server.
 
-`$ (sudo) docker-compose up`
+    `$ (sudo) docker-compose up`
 
 9. Open http://localhost:8003/annotation_tool/ or **http://<your_server>:8003/annotation_tool/** in your browser. You can change the port in docker-compose.yml.
 
 10. To close BAT, open a new terminal, go to the directory of the repository and type:
 
-`$ (sudo) docker-compose down`
+    `$ (sudo) docker-compose down`
 
 11. To access the database using the DJANGO shell: (to close it use 9.)
 
-`$ (sudo) docker-compose run django python manage.py shell`
+    `$ (sudo) docker-compose run django python manage.py shell`
 
 12. To log into the postgresql database:
 
-`$ (sudo) docker ps -a` (indentify which is the postgresql container)
+    `$ (sudo) docker ps -a` (indentify which is the postgresql container)
 
-`$ (sudo) docker exec -i <container ID> psql -U bat_admin -p 5432`
+    `$ (sudo) docker exec -i <container ID> psql -U bat_admin -p 5432`
 
 First steps with BAT:
 --------------
