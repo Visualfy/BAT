@@ -17,8 +17,8 @@ try:
     if created:
         Class.root = Class
         Class.save()
-except:
-    logging.debug('main class not created')
+except Exception as e:
+    logging.debug(e)
 
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
