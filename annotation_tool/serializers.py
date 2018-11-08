@@ -9,19 +9,26 @@ from annotation_tool import models
 import logging
 
 id = 'root'
-Class, created = models.Class.objects.get_or_create(name=id)
-rootID = Class.id
+rootID = 0
+try:
+    Class, created = models.Class.objects.get_or_create(name=id)
+    rootID = Class.id
 
-if created:
-    Class.root = Class
-    Class.save()
+    if created:
+        Class.root = Class
+        Class.save()
+except:
+    logging.debug('main class not created')
 
 class ProjectSerializer(serializers.Serializer):
     project_name = serializers.CharField(label='Project name', max_length=50)
     overlap = serializers.BooleanField(label='Allow class overlap in this project', default=False)
     classes = serializers.MultipleChoiceField(choices=[])
 
-    rootID = rootID
+    if rootID == 0:
+        rootID = rootID
+    else:
+        rootID = 1
 
     # Creation of the project and the required ClassInstance objects
     def create(self, validated_data):
