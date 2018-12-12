@@ -239,18 +239,24 @@ def delete_annotations(annotation):
     logging.debug(annotation.id)
     allFiles = ls('chunks')
 
-    for audioFile in allFiles:
-        logging.debug(audioFile.name)
+    for directory in allFiles:
+        logging.debug(directory.path)
 
 # def ls(ruta = '.'):
 #     return next(os.walk(ruta))[2]
 
 
-def ls(ruta = '.'):
-    listaarchivos = []
-    for (_, _, archivos) in os.walk(ruta):
-        listaarchivos.extend(archivos)
-    return listaarchivos
+def ls(route = '.'):
+    list = []
+    for (path, _, files) in os.walk(route):
+        list.append(Directory(files, path))
+    return list
+
+
+class Directory:
+    def __init__(self, files, path):
+        self.files = files
+        self.path = path
 
 
 def compute_rms(sr, wav, start_time, end_time, dtype):
