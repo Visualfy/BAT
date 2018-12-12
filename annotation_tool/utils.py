@@ -242,11 +242,12 @@ def delete_annotations(annotation):
     for directory in allFiles:
         for file in directory.files:
             if file.split('.')[1] == 'wav':
-                logging.debug(directory.path + file)
-                if os.path.exists(directory.path + file):
-                    os.remove(directory.path + file)
-                else:
-                    logging.debug("The file does not exist")
+                splitFile = file.split('_')
+                if splitFile[len(splitFile)-1] == annotation.id:
+                    if os.path.exists(directory.path + file):
+                        os.remove(directory.path + file)
+                    else:
+                        logging.debug("The file does not exist")
 
 
 def ls(route = '.'):
