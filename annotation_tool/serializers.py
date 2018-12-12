@@ -88,7 +88,6 @@ class ProjectSerializer(serializers.Serializer):
     def getChildClass (self, classes, rootID):
         classChildTree = filter(lambda x: x.root.id == rootID and x.name != id, classes)
 
-        logging.debug(classChildTree)
         for cclass in classChildTree:
             cclass.childs = self.getChildClass(classes, cclass.id)
 
@@ -113,13 +112,6 @@ class ProjectSerializer(serializers.Serializer):
 
         for cclass in classTree:
             cclass.childs = self.getChildClass(classesWhereFind, cclass.id)
-        #
-        # for cclass in classTree:
-        #     logging.debug(cclass.childs)
-        #     for cclass2 in cclass.childs:
-        #         logging.debug(cclass2.childs)
-
-
 
 class TagSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50)

@@ -17,6 +17,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from config.settings.common import BASE_DIR, MEDIA_ROOT
 from annotation_tool import models
+import logging
 
 def create_project(name, creation_date):
     p = Project(name=name, creation_date=creation_date)
@@ -198,7 +199,8 @@ def getPath(clas, classesWhereFind, path):
         # return '/'.join(reversed(path))+'/'
         return path[::-1]
 
-def region_to_wav(segment,region,clas):
+
+def region_to_wav(annotation, segment, region, clas):
     classesWhereFind = models.Class.objects.all()
     path = getPath(clas, classesWhereFind, [clas.name])
 
@@ -218,7 +220,7 @@ def region_to_wav(segment,region,clas):
     pathFolderString = '/'.join(path) + '/'
 
     input_file = os.path.join(MEDIA_ROOT, segment.wav.file.name)
-    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + input_file.split('/')[-1]
+    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + str(annotation.id) + '_' + input_file.split('/')[-1]
     start = segment.start_time + region.start_time
     end = segment.start_time + region.end_time
 
@@ -232,6 +234,32 @@ def region_to_wav(segment,region,clas):
         sample_rate,
         wav[start:end])
 
+
+def delete_annotations(annotation):
+    allFiles = ls('chunks')
+
+    for directory in allFiles:
+        for file in directory.files:
+            if file.split('.')[1] == 'wav':
+                splitFile = file.split('_')
+                if int(splitFile[len(splitFile)-2]) == int(annotation.id):
+                    if os.path.exists(directory.path + file):
+                        os.remove(directory.path + file)
+                    else:
+                        logging.debug("The file does not exist")
+
+
+def ls(route = '.'):
+    list = []
+    for (path, _, files) in os.walk(route):
+        list.append(Directory(files, path + '/'))
+    return list
+
+
+class Directory:
+    def __init__(self, files, path):
+        self.files = files
+        self.path = path
 
 
 def compute_rms(sr, wav, start_time, end_time, dtype):
