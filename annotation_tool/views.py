@@ -95,11 +95,17 @@ class AnnotationView(SuperuserRequiredMixin, DestroyAPIView):
     queryset = models.Annotation.objects.all()
     lookup_field = 'id'
 
+    def delete(self, request, *args, **kwargs):
+        if self.get_object().id is not None:
+            annotation = models.Annotation.objects.get(id=self.get_object().id)
+            # utils.delete_annotations(annotation)
+            annotation.delete()
+            return Response({'result': 'deleted'})
+
 
 class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
     queryset = models.Annotation.objects.all()
     lookup_field = 'id'
-
 
     def post(self, request, *args, **kwargs):
         annotation = self.get_object()
