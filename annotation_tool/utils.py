@@ -220,7 +220,7 @@ def region_to_wav(annotation, segment, region, clas):
     pathFolderString = '/'.join(path) + '/'
 
     input_file = os.path.join(MEDIA_ROOT, segment.wav.file.name)
-    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + str(annotation.id) + '_' +input_file.split('/')[-1]
+    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + str(annotation.id) + '_' + input_file.split('/')[-1]
     start = segment.start_time + region.start_time
     end = segment.start_time + region.end_time
 
@@ -234,8 +234,23 @@ def region_to_wav(annotation, segment, region, clas):
         sample_rate,
         wav[start:end])
 
+
 def delete_annotations(annotation):
     logging.debug(annotation.id)
+    allFiles = ls('chunks')
+
+    for audioFile in allFiles:
+        logging.debug(audioFile.name)
+
+# def ls(ruta = '.'):
+#     return next(os.walk(ruta))[2]
+
+
+def ls(ruta = '.'):
+    listaarchivos = []
+    for (_, _, archivos) in os.walk(ruta):
+        listaarchivos.extend(archivos)
+    return listaarchivos
 
 
 def compute_rms(sr, wav, start_time, end_time, dtype):
