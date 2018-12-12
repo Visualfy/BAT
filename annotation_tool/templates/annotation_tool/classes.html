@@ -228,8 +228,9 @@
                         xhr.setRequestHeader("X-CSRFToken", CSRF_TOKEN);
                     },
                     type: 'DELETE',
-                    success: function () {
+                    success: function (data) {
                         //reset page
+                        console.log(data);
                         location.reload()
                     }
                 });
