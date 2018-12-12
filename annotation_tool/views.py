@@ -98,8 +98,8 @@ class AnnotationView(SuperuserRequiredMixin, DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         if self.get_object().id is not None:
             annotation = models.Annotation.objects.get(id=self.get_object().id)
-            # utils.delete_annotations(annotation)
-            annotation.delete()
+            utils.delete_annotations(annotation)
+            # annotation.delete() //TODO descomentar
             return Response({'result': 'deleted'})
 
 
@@ -128,7 +128,7 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                             class_obj=e.event_class,
                                             prominence=5)
                 cp.save()
-                utils.region_to_wav(segment, region, e.event_class)
+                utils.region_to_wav(annotation, segment, region, e.event_class)
 
         utils.update_annotation_status(annotation,
                                        new_status=models.Annotation.FINISHED)
