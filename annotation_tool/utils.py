@@ -240,11 +240,11 @@ def delete_annotations(annotation):
     allFiles = ls('chunks')
 
     for directory in allFiles:
-        logging.debug(directory.path)
-
-# def ls(ruta = '.'):
-#     return next(os.walk(ruta))[2]
-
+        for file in directory.files:
+            if os.path.exists(directory.path + file):
+                os.remove(directory.path + file)
+            else:
+                logging.debug("The file does not exist")
 
 def ls(route = '.'):
     list = []
