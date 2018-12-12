@@ -241,15 +241,18 @@ def delete_annotations(annotation):
 
     for directory in allFiles:
         for file in directory.files:
-            if os.path.exists(directory.path + file):
-                os.remove(directory.path + file)
-            else:
-                logging.debug("The file does not exist")
+            if file.split('.')[1] == 'wav':
+                logging.debug(directory.path + file)
+                if os.path.exists(directory.path + file):
+                    os.remove(directory.path + file)
+                else:
+                    logging.debug("The file does not exist")
+
 
 def ls(route = '.'):
     list = []
     for (path, _, files) in os.walk(route):
-        list.append(Directory(files, path))
+        list.append(Directory(files, path + '/'))
     return list
 
 
