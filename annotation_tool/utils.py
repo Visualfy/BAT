@@ -236,14 +236,13 @@ def region_to_wav(annotation, segment, region, clas):
 
 
 def delete_annotations(annotation):
-    logging.debug(annotation.id)
     allFiles = ls('chunks')
 
     for directory in allFiles:
         for file in directory.files:
             if file.split('.')[1] == 'wav':
                 splitFile = file.split('_')
-                if splitFile[len(splitFile)-1] == annotation.id:
+                if int(splitFile[len(splitFile)-2]) == int(annotation.id):
                     if os.path.exists(directory.path + file):
                         os.remove(directory.path + file)
                     else:

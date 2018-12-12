@@ -99,7 +99,7 @@ class AnnotationView(SuperuserRequiredMixin, DestroyAPIView):
         if self.get_object().id is not None:
             annotation = models.Annotation.objects.get(id=self.get_object().id)
             utils.delete_annotations(annotation)
-            # annotation.delete() //TODO descomentar
+            annotation.delete()
             return Response({'result': 'deleted'})
 
 
