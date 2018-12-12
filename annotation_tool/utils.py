@@ -218,7 +218,7 @@ def region_to_wav(segment,region,clas):
     pathFolderString = '/'.join(path) + '/'
 
     input_file = os.path.join(MEDIA_ROOT, segment.wav.file.name)
-    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + input_file.split('/')[-1]
+    output_file = 'chunks/' + pathFolderString + str(clas) + '_' + str(region.id) + '_' + str(segment.id) + '_' +input_file.split('/')[-1]
     start = segment.start_time + region.start_time
     end = segment.start_time + region.end_time
 
