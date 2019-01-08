@@ -49,10 +49,35 @@ class ProjectsView(SuperuserRequiredMixin, GenericAPIView):
                          'serializer': serializer,
                          'errors': serializer.errors})
 
+    # def delete(self, request, *args, **kwargs):
+    #
+    #     logging.debug('fuera')
+    #
+    #     if self.get_object().id is not None:
+    #         # annotation = models.Annotation.objects.get(id=self.get_object().id)
+    #         # utils.delete_annotations(annotation)
+    #         # annotation.delete()
+    #         logging.debug('dentro')
+    #
+    #         return Response({'result': 'deleted'})
+
 
 class ProjectView(SuperuserRequiredMixin, DestroyAPIView):
     queryset = models.Project.objects.all()
     lookup_field = 'id'
+
+    def delete(self, request, *args, **kwargs):
+        if self.get_object().id is not None:
+            project = models.Project.objects.get(id=self.get_object().id)
+            annotations = models.Annotation.objects.all()
+
+            for annotation in annotations:
+                if annotation.segment.wav.project.id == project.id:
+                    utils.delete_annotations(annotation)
+
+            project.delete()
+
+            return Response({'result': 'deleted'})
 
 
 class AnnotationsView(SuperuserRequiredMixin, GenericAPIView):
