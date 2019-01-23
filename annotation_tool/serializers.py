@@ -96,7 +96,7 @@ class ProjectSerializer(serializers.Serializer):
     # All the names of Class objects are loaded to the classes field
     # http://programtalk.com/python-examples/aiorest_ws.utils.fields.flatten_choices_dict/
     def __init__(self, *args, **kwargs):
-        classes = models.Class.objects.filter(root=rootID).exclude(name=self.rootID)
+        classes = models.Class.objects.filter(root=rootID).exclude(id=self.rootID)
         class_dict = dict([(c.name, c.id) for c in classes])
         self.fields['classes'].grouped_choices = to_choices_dict(class_dict)
         self.fields['classes'].choices = flatten_choices_dict(self.fields['classes'].grouped_choices)
