@@ -134,11 +134,11 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
         annotation = self.get_object()
         regions = models.Region.objects.filter(annotation=annotation)
         events = models.Event.objects.filter(annotation=annotation)
+        segment = annotation.segment
 
         logging.debug(len(events))
 
         if check_all_events_with_name(events) or len(events) == 0:
-            segment = annotation.segment
             logging.debug('Dentro del primer if')
             project = annotation.get_project()
 
@@ -174,21 +174,17 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                 utils.update_annotation_status(annotation,
                                                new_status=models.Annotation.FINISHED)
 
-                # find unfinished annotation for current project
-                segment = utils.pick_segment_to_annotate(project.name, request.user.id)
-
+            # find unfinished annotation for current project
+            segment = utils.pick_segment_to_annotate(project.name, request.user.id)
             next_annotation_url = ''
 
             if not segment:
-                logging.debug('Dentro de if not segment')
                 return JsonResponse({'next_annotation_url': next_annotation_url})
 
             elif request.data.get('load next') == '1':
-                logging.debug('Dentro de if not segment elif')
-
-                next_annotation = annotation.get_next_by_annotation_date()
-
-                if not next_annotation:
+                try:
+                    next_annotation = annotation.get_next_by_annotation_date()
+                except:
                     next_annotation = utils.create_annotation(segment, request.user)
 
                 next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
@@ -200,7 +196,6 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
 
         else:
             project = annotation.get_project()
-
             current_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
                                                                         project.id,
                                                                         annotation.id)
