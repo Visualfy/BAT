@@ -135,13 +135,20 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
         regions = models.Region.objects.filter(annotation=annotation)
         events = models.Event.objects.filter(annotation=annotation)
 
+        logging.debug(len(events))
+
         if check_all_events_with_name(events) or len(events) == 0:
+            segment = annotation.segment
+            logging.debug('Dentro del primer if')
+            project = annotation.get_project()
+
             if not regions:
+                logging.debug('Dentro de  if not region')
+
                 # for e in regions:
                 #     logging.debug(e )
 
 
-                segment = annotation.segment
 
                 # if check_all_events_with_name(events):
                 for e in events:
@@ -168,19 +175,28 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                                new_status=models.Annotation.FINISHED)
 
                 # find unfinished annotation for current project
-                project = annotation.get_project()
                 segment = utils.pick_segment_to_annotate(project.name, request.user.id)
 
-                next_annotation_url = ''
-                if not segment:
-                    return JsonResponse({'next_annotation_url': next_annotation_url})
-                elif request.data.get('load next') == '1':
-                    # if have unannotated segment
+            next_annotation_url = ''
+
+            if not segment:
+                logging.debug('Dentro de if not segment')
+                return JsonResponse({'next_annotation_url': next_annotation_url})
+
+            elif request.data.get('load next') == '1':
+                logging.debug('Dentro de if not segment elif')
+
+                next_annotation = annotation.get_next_by_annotation_date()
+
+                if not next_annotation:
                     next_annotation = utils.create_annotation(segment, request.user)
-                    next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
-                                                                               project.id,
-                                                                               next_annotation.id)
-                    return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
+
+                next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
+                                                                           project.id,
+                                                                           next_annotation.id)
+                return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse({})
 
         else:
             project = annotation.get_project()
