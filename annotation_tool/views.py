@@ -136,21 +136,10 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
         events = models.Event.objects.filter(annotation=annotation)
         segment = annotation.segment
 
-        logging.debug(len(events))
-
         if check_all_events_with_name(events) or len(events) == 0:
-            logging.debug('Dentro del primer if')
             project = annotation.get_project()
 
             if not regions:
-                logging.debug('Dentro de  if not region')
-
-                # for e in regions:
-                #     logging.debug(e )
-
-
-
-                # if check_all_events_with_name(events):
                 for e in events:
                     region = models.Region(annotation=annotation,
                                            start_time=e.start_time,
@@ -165,11 +154,7 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                                 prominence=5)
                     cp.save()
 
-                    # if e.event_class:
-                    #     logging.debug(e.event_class)
-
-
-                    # utils.region_to_wav(annotation, segment, region, e.event_class)
+                    utils.region_to_wav(annotation, segment, region, e.event_class)
 
                 utils.update_annotation_status(annotation,
                                                new_status=models.Annotation.FINISHED)
@@ -182,14 +167,23 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                 return JsonResponse({'next_annotation_url': next_annotation_url})
 
             elif request.data.get('load next') == '1':
+
                 try:
-                    next_annotation = annotation.get_next_by_annotation_date()
+                    annotations = models.Annotation.objects.all().order_by('-status')
+                    next_annotation = annotations.first()
+                    if next_annotation.status == 'finished':
+                        next_annotation = utils.create_annotation(segment, request.user)
+
+                    # This line find the next annotation, finished or not
+                    # next_annotation = annotation.get_next_by_annotation_date()
+
                 except:
                     next_annotation = utils.create_annotation(segment, request.user)
 
                 next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
                                                                            project.id,
                                                                            next_annotation.id)
+
                 return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({})
@@ -197,8 +191,9 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
         else:
             project = annotation.get_project()
             current_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
-                                                                        project.id,
-                                                                        annotation.id)
+                                                                          project.id,
+                                                                          annotation.id)
+
             return Response(data={'next_annotation_url': current_annotation_url}, status=status.HTTP_200_OK)
 
 
