@@ -116,6 +116,16 @@ class AnnotationView(SuperuserRequiredMixin, DestroyAPIView):
             return Response({'result': 'deleted'})
 
 
+def check_all_events_with_name(events):
+    all_right = True
+
+    for e in events:
+        if not e.event_class:
+            all_right = False
+
+    return all_right
+
+
 class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
     queryset = models.Annotation.objects.all()
     lookup_field = 'id'
@@ -123,45 +133,62 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
     def post(self, request, *args, **kwargs):
         annotation = self.get_object()
         regions = models.Region.objects.filter(annotation=annotation)
-        if not regions:
-            events = models.Event.objects.filter(annotation=annotation)
+        events = models.Event.objects.filter(annotation=annotation)
 
-            segment = annotation.segment
+        if check_all_events_with_name(events) or len(events) == 0:
+            if not regions:
+                # for e in regions:
+                #     logging.debug(e )
 
-            for e in events:
-                region = models.Region(annotation=annotation,
-                                       start_time=e.start_time,
-                                       end_time=e.end_time,
-                                       color=e.color)
-                for t in e.tags.values_list('name'):
-                    tag = models.Tag.objects.get_or_create(name=t)
-                    region.tags.add(tag[0])
-                region.save()
-                cp = models.ClassProminence(region=region,
-                                            class_obj=e.event_class,
-                                            prominence=5)
-                cp.save()
-                utils.region_to_wav(annotation, segment, region, e.event_class)
 
-        utils.update_annotation_status(annotation,
-                                       new_status=models.Annotation.FINISHED)
+                segment = annotation.segment
 
-        # find unfinished annotation for current project
-        project = annotation.get_project()
-        segment = utils.pick_segment_to_annotate(project.name, request.user.id)
+                # if check_all_events_with_name(events):
+                for e in events:
+                    region = models.Region(annotation=annotation,
+                                           start_time=e.start_time,
+                                           end_time=e.end_time,
+                                           color=e.color)
+                    for t in e.tags.values_list('name'):
+                        tag = models.Tag.objects.get_or_create(name=t)
+                        region.tags.add(tag[0])
+                    region.save()
+                    cp = models.ClassProminence(region=region,
+                                                class_obj=e.event_class,
+                                                prominence=5)
+                    cp.save()
 
-        next_annotation_url = ''
-        if not segment:
-            return JsonResponse({'next_annotation_url':next_annotation_url})
-        elif request.data.get('load next') == '1':
-            # if have unannotated segment
-            next_annotation = utils.create_annotation(segment, request.user)
-            next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
-                                                                       project.id,
-                                                                       next_annotation.id)
-            return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
+                    # if e.event_class:
+                    #     logging.debug(e.event_class)
+
+
+                    # utils.region_to_wav(annotation, segment, region, e.event_class)
+
+                utils.update_annotation_status(annotation,
+                                               new_status=models.Annotation.FINISHED)
+
+                # find unfinished annotation for current project
+                project = annotation.get_project()
+                segment = utils.pick_segment_to_annotate(project.name, request.user.id)
+
+                next_annotation_url = ''
+                if not segment:
+                    return JsonResponse({'next_annotation_url': next_annotation_url})
+                elif request.data.get('load next') == '1':
+                    # if have unannotated segment
+                    next_annotation = utils.create_annotation(segment, request.user)
+                    next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
+                                                                               project.id,
+                                                                               next_annotation.id)
+                    return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
+
         else:
-            return JsonResponse({})
+            project = annotation.get_project()
+
+            current_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
+                                                                        project.id,
+                                                                        annotation.id)
+            return Response(data={'next_annotation_url': current_annotation_url}, status=status.HTTP_200_OK)
 
 
 class ClassesView(SuperuserRequiredMixin, GenericAPIView):
@@ -494,12 +521,14 @@ def create_region(request):
     for t in region_data['tags']:
         tag = models.Tag.objects.get_or_create(name=t)
         region.tags.add(tag[0])
+
     region.save()
 
     for class_name in region_data['classes'].split():
         class_obj = models.Class.objects.get(name=class_name)
         class_prominence = models.ClassProminence(region=region,
                                                   class_obj=class_obj)
+
         class_prominence.save()
 
     return JsonResponse({'region_id': region.id})
