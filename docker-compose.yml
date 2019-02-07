@@ -2,19 +2,22 @@ version: '2'
 
 volumes:
   postgres_data: {}
-  postgres_backup: {}
 
 services:
   postgres:
     build: ./compose/postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - postgres_backup:/backups
+      - ../backups:/backups
     environment:
       - POSTGRES_USER=user
     ports:
       - "5432:5432"
-
+    ulimits:
+        nproc: 65535
+        nofile:
+            soft: 20000
+            hard: 40000
   django:
     build:
       context: .
@@ -32,3 +35,8 @@ services:
       - "8003:8000"
     links:
       - postgres
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
