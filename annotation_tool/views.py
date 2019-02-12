@@ -61,7 +61,7 @@ class ProjectView(SuperuserRequiredMixin, DestroyAPIView):
 
             for annotation in annotations:
                 if annotation.segment.wav.project.id == project.id:
-                    utils.delete_annotations(annotation)
+                    utils.delete_annotations(annotation, project)
 
             project.delete()
 
@@ -111,7 +111,7 @@ class AnnotationView(SuperuserRequiredMixin, DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         if self.get_object().id is not None:
             annotation = models.Annotation.objects.get(id=self.get_object().id)
-            utils.delete_annotations(annotation)
+            utils.delete_annotations(annotation, annotation.segment.wav.project)
             annotation.delete()
             return Response({'result': 'deleted'})
 
