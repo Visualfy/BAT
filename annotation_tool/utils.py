@@ -242,7 +242,7 @@ def delete_annotations(annotation):
         for file in directory.files:
             if file.split('.')[1] == 'wav':
                 splitFile = file.split('_')
-                if int(splitFile[len(splitFile)-2]) == int(annotation.id):
+                if int(splitFile[2]) == int(annotation.id):
                     if os.path.exists(directory.path + file):
                         os.remove(directory.path + file)
                     else:
