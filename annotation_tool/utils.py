@@ -235,18 +235,42 @@ def region_to_wav(annotation, segment, region, clas):
         wav[start:end])
 
 
-def delete_annotations(annotation):
-    allFiles = ls('chunks')
+def is_a_wav_file(file):
+    file_splited = file.split('.')
+    return file_splited[len(file_splited)-1] == 'wav'
 
-    for directory in allFiles:
-        for file in directory.files:
-            if file.split('.')[1] == 'wav':
-                splitFile = file.split('_')
-                if int(splitFile[len(splitFile)-2]) == int(annotation.id):
-                    if os.path.exists(directory.path + file):
-                        os.remove(directory.path + file)
-                    else:
-                        logging.debug("The file does not exist")
+
+def remove_file(class_name, directory, file, annotation):
+        if os.path.exists(directory.path + file):
+            logging.debug(file)
+
+            os.remove(directory.path + file)
+        else:
+            logging.debug("The file does not exist")
+
+
+def delete_file_by_classname(classArray, annotation):
+    all_files = ls('chunks')
+
+    for directory in all_files:
+        if directory.name in classArray:
+            for file in directory.files:
+                if is_a_wav_file(file):
+                    splitFile = file.split(directory.name)[1].split('_')
+                    try:
+                        if int(splitFile[2]) == int(annotation.id):
+                            remove_file(directory.name, directory, file, annotation)
+                    except:
+                        logging.debug("Error in delete_file_by_classname ")
+
+
+def delete_annotations(annotation, project):
+    ci = models.ClassInstance.objects.filter(project=project.id)
+    classArray = []
+    for classIntance in ci:
+        classArray.append(classIntance.class_obj.name)
+
+    delete_file_by_classname(classArray, annotation)
 
 
 def ls(route = '.'):
@@ -258,6 +282,7 @@ def ls(route = '.'):
 
 class Directory:
     def __init__(self, files, path):
+        self.name = path.split('/')[len(path.split('/')) - 2]
         self.files = files
         self.path = path
 
