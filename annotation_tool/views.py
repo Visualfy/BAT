@@ -27,7 +27,6 @@ from annotation_tool.serializers import ProjectSerializer, ClassSerializer, Uplo
 import utils
 from django.contrib.auth import authenticate, login, logout
 
-import logging
 
 class ProjectsView(SuperuserRequiredMixin, GenericAPIView):
     renderer_classes = [TemplateHTMLRenderer]
@@ -126,6 +125,16 @@ def check_all_events_with_name(events):
     return all_right
 
 
+def annotations_by_project(project):
+    annotations = models.Annotation.objects.all().order_by('-status')
+    filtered_annotations = []
+    for ann in annotations:
+        if ann.segment.wav.project.id == project.id:
+            filtered_annotations.append(ann)
+
+    return filtered_annotations
+
+
 class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
     queryset = models.Annotation.objects.all()
     lookup_field = 'id'
@@ -135,9 +144,9 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
         regions = models.Region.objects.filter(annotation=annotation)
         events = models.Event.objects.filter(annotation=annotation)
         segment = annotation.segment
+        project = annotation.get_project()
 
         if check_all_events_with_name(events) or len(events) == 0:
-            project = annotation.get_project()
 
             if not regions:
                 for e in events:
@@ -160,36 +169,29 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
                                                new_status=models.Annotation.FINISHED)
 
             # find unfinished annotation for current project
-            segment = utils.pick_segment_to_annotate(project.name, request.user.id)
             next_annotation_url = ''
 
-            if not segment:
-                return JsonResponse({'next_annotation_url': next_annotation_url})
+            annotations = annotations_by_project(project)
+            next_annotation = annotations[0]
 
-            elif request.data.get('load next') == '1':
+            if next_annotation.status == 'finished':
+                segment = utils.pick_segment_to_annotate(project.name, request.user.id)
 
-                try:
-                    annotations = models.Annotation.objects.all().order_by('-status')
-                    next_annotation = annotations.first()
-                    if next_annotation.status == 'finished':
-                        next_annotation = utils.create_annotation(segment, request.user)
+                if not segment:
+                    return JsonResponse({'next_annotation_url': next_annotation_url})
 
-                    # This line find the next annotation, finished or not
-                    # next_annotation = annotation.get_next_by_annotation_date()
-
-                except:
+                elif request.data.get('load next') == '1':
                     next_annotation = utils.create_annotation(segment, request.user)
 
-                next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
-                                                                           project.id,
-                                                                           next_annotation.id)
+                else:
+                    return JsonResponse({})
+            next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
+                                                                       project.id,
+                                                                       next_annotation.id)
 
-                return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
-            else:
-                return JsonResponse({})
+            return Response(data={'next_annotation_url': next_annotation_url}, status=status.HTTP_200_OK)
 
         else:
-            project = annotation.get_project()
             current_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
                                                                           project.id,
                                                                           annotation.id)
