@@ -25,6 +25,7 @@ from annotation_tool.mixins import SuperuserRequiredMixin
 from annotation_tool.serializers import ProjectSerializer, ClassSerializer, UploadDataSerializer, LoginSerializer, \
     UserRegistrationSerializer#, RegionSerializer, ClassProminenceSerializer
 import utils
+import logging
 from django.contrib.auth import authenticate, login, logout
 
 
@@ -126,7 +127,7 @@ def check_all_events_with_name(events):
 
 
 def annotations_by_project(project):
-    annotations = models.Annotation.objects.all().order_by('-status')
+    annotations = models.Annotation.objects.filter(status__icontains='unfinished')
     filtered_annotations = []
     for ann in annotations:
         if ann.segment.wav.project.id == project.id:
@@ -170,11 +171,9 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
 
             # find unfinished annotation for current project
             next_annotation_url = ''
-
             annotations = annotations_by_project(project)
-            next_annotation = annotations[0]
 
-            if next_annotation.status == 'finished':
+            if len(annotations) == 0:
                 segment = utils.pick_segment_to_annotate(project.name, request.user.id)
 
                 if not segment:
@@ -185,6 +184,10 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
 
                 else:
                     return JsonResponse({})
+
+            else:
+                next_annotation = annotations[0]
+
             next_annotation_url = '{}?project={}&annotation={}'.format(reverse('new_annotation'),
                                                                        project.id,
                                                                        next_annotation.id)
