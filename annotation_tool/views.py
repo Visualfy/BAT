@@ -126,9 +126,8 @@ def check_all_events_with_name(events):
     return all_right
 
 
-def annotations_by_project(project, user):
-    annotations = models.Annotation.objects.filter(status__icontains='unfinished',
-                                                   user=user.id)
+def annotations_by_project(project):
+    annotations = models.Annotation.objects.filter(status__icontains='unfinished')
     filtered_annotations = []
     for ann in annotations:
         if ann.segment.wav.project.id == project.id:
@@ -172,7 +171,7 @@ class AnnotationFinishView(LoginRequiredMixin, GenericAPIView):
 
             # find unfinished annotation for current project
             next_annotation_url = ''
-            annotations = annotations_by_project(project, request.user)
+            annotations = annotations_by_project(project)
 
             if len(annotations) == 0:
                 segment = utils.pick_segment_to_annotate(project.name, request.user.id)
